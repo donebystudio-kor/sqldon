@@ -4,13 +4,18 @@ import type { Category } from '@/constants/categories';
 interface Props {
   category: Category;
   problemCount: number;
+  highlight?: boolean;
 }
 
-export default function CategoryCard({ category, problemCount }: Props) {
+export default function CategoryCard({ category, problemCount, highlight }: Props) {
   return (
     <Link
       href={`/quiz/${category.id}`}
-      className="bg-surface border border-border rounded-lg p-5 hover:border-primary hover:shadow-md transition-all group"
+      className={`bg-surface border-2 rounded-lg p-5 hover:shadow-md active:scale-[0.98] transition-all group ${
+        highlight
+          ? 'border-primary/30 hover:border-primary'
+          : 'border-border hover:border-primary/50'
+      }`}
     >
       <div className="flex items-center gap-3 mb-3">
         <span className="text-2xl">{category.icon}</span>

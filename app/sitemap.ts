@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { SITE } from '@/constants/site';
 import { CATEGORIES } from '@/constants/categories';
 import { CONCEPTS } from '@/data/concepts';
+import { ALL_PROBLEMS } from '@/data/problems';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = SITE.url;
@@ -11,8 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: base, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
     { url: `${base}/diagram`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/plan`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${base}/result`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${base}/result`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
   const categoryPages: MetadataRoute.Sitemap = CATEGORIES.map(cat => ({
@@ -22,12 +23,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const conceptPages: MetadataRoute.Sitemap = CONCEPTS.map(c => ({
-    url: `${base}/concept/${c.tag}`,
+  const problemPages: MetadataRoute.Sitemap = ALL_PROBLEMS.map(p => ({
+    url: `${base}/quiz/${p.category}/${p.id}`,
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...conceptPages];
+  const conceptPages: MetadataRoute.Sitemap = CONCEPTS.map(c => ({
+    url: `${base}/concept/${c.tag}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...categoryPages, ...problemPages, ...conceptPages];
 }

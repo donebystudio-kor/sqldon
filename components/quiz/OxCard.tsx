@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { OxProblem } from '@/types/problem';
+import HintSteps from './HintSteps';
 
 interface Props {
   problem: OxProblem;
@@ -11,6 +12,7 @@ interface Props {
 export default function OxCard({ problem, onResult }: Props) {
   const [selected, setSelected] = useState<'O' | 'X' | null>(null);
   const [result, setResult] = useState<'correct' | 'wrong' | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const handleClick = (choice: 'O' | 'X') => {
     if (result !== null) return;
@@ -24,11 +26,17 @@ export default function OxCard({ problem, onResult }: Props) {
     if (result === null) {
       return 'border-border hover:border-primary hover:bg-primary-light';
     }
-    if (choice === problem.answer) {
+    // After show answer, reveal correct
+    if (showAnswer && choice === problem.answer) {
       return 'border-success bg-success/10 text-success';
     }
-    if (choice === selected && choice !== problem.answer) {
+    // Selected wrong
+    if (choice === selected && result === 'wrong') {
       return 'border-error bg-error/10 text-error';
+    }
+    // Selected correct
+    if (choice === selected && result === 'correct') {
+      return 'border-success bg-success/10 text-success';
     }
     return 'border-border opacity-50';
   };
@@ -59,14 +67,50 @@ export default function OxCard({ problem, onResult }: Props) {
         <div
           className={`mt-4 p-4 rounded-lg border ${
             result === 'correct'
-              ? 'bg-success/10 border-success text-success'
-              : 'bg-error/10 border-error text-error'
+              ? 'bg-success/5 border-success/30'
+              : 'bg-error/5 border-error/30'
           }`}
         >
-          <p className="font-medium">
-            {result === 'correct' ? '정답입니다!' : `오답입니다. 정답은 ${problem.answer}입니다.`}
-          </p>
-          <p className="text-sm mt-1 text-text-sub">{problem.explanation}</p>
+          {result === 'correct' ? (
+            <p className="font-medium text-success">정답입니다!</p>
+          ) : (
+            <>
+              <p className="font-medium text-error mb-1">틀렸습니다.</p>
+              <p className="text-sm text-text-sub">
+                문장을 다시 한번 꼼꼼히 읽어보세요. 핵심 키워드의 정확한 의미에 주목하면 답을 찾을 수 있습니다.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Hints */}
+      {problem.hints && (
+        <HintSteps
+          hints={problem.hints}
+          submitted={result !== null}
+          onShowAnswer={() => setShowAnswer(true)}
+        />
+      )}
+
+      {/* Explanation + answer (only after showAnswer or correct) */}
+      {(showAnswer || result === 'correct') && (
+        <div className="mt-4 space-y-3">
+          {result === 'wrong' && (
+            <div className="p-4 bg-primary-light rounded-lg">
+              <p className="text-sm font-medium">정답: {problem.answer}</p>
+            </div>
+          )}
+          <div className="p-4 bg-surface border border-border rounded-lg">
+            <p className="text-sm font-medium mb-1">해설:</p>
+            <p className="text-sm text-text-sub">{problem.explanation}</p>
+          </div>
+          <div className="p-4 bg-primary-light/50 rounded-lg">
+            <p className="text-sm">
+              <span className="font-medium text-primary">학습 포인트:</span>{' '}
+              <span className="text-text-sub">{problem.learningPoint}</span>
+            </p>
+          </div>
         </div>
       )}
     </div>

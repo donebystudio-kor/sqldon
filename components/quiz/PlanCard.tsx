@@ -49,13 +49,15 @@ export default function PlanCard({ problem, onResult }: Props) {
                 handleSubmit(choice);
               }}
               disabled={result !== null}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors active:scale-95 ${
                 answer === choice && result === 'correct'
                   ? 'border-success bg-success/10 text-success'
                   : answer === choice && result === 'wrong'
                   ? 'border-error bg-error/10 text-error'
+                  : result !== null && showAnswer && choice === problem.correctAnswer
+                  ? 'border-success bg-success/10 text-success'
                   : 'border-border hover:border-primary'
-              }`}
+              } ${result !== null ? 'cursor-default' : ''}`}
             >
               {choice}
             </button>
@@ -75,7 +77,7 @@ export default function PlanCard({ problem, onResult }: Props) {
           {result === null && (
             <button
               onClick={() => handleSubmit()}
-              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 active:scale-95 transition-colors"
             >
               제출
             </button>
@@ -88,25 +90,54 @@ export default function PlanCard({ problem, onResult }: Props) {
         <div
           className={`mt-4 p-4 rounded-lg border ${
             result === 'correct'
-              ? 'bg-success/10 border-success text-success'
-              : 'bg-error/10 border-error text-error'
+              ? 'bg-success/5 border-success/30'
+              : 'bg-error/5 border-error/30'
           }`}
         >
-          <p className="font-medium">
-            {result === 'correct' ? '정답입니다!' : `오답입니다. 정답: ${problem.correctAnswer}`}
-          </p>
-          <p className="text-sm mt-1 text-text-sub">{problem.explanation}</p>
+          {result === 'correct' ? (
+            <p className="font-medium text-success">정답입니다!</p>
+          ) : (
+            <>
+              <p className="font-medium text-error mb-1">틀렸습니다.</p>
+              {problem.choiceExplanations?.find(c => c.value === answer) ? (
+                <p className="text-sm text-text-sub">
+                  "{answer}" → {problem.choiceExplanations.find(c => c.value === answer)?.explanation}
+                </p>
+              ) : (
+                <p className="text-sm text-text-sub">
+                  실행계획의 각 단계별 비용(Cost)과 오퍼레이션 이름을 다시 확인해보세요.
+                </p>
+              )}
+            </>
+          )}
         </div>
       )}
 
       {/* Hints */}
-      {result === null && (
-        <HintSteps hints={problem.hints} onShowAnswer={() => setShowAnswer(true)} />
-      )}
+      <HintSteps
+        hints={problem.hints}
+        submitted={result !== null}
+        onShowAnswer={() => setShowAnswer(true)}
+      />
 
-      {showAnswer && (
-        <div className="mt-4 p-4 bg-primary-light rounded-lg">
-          <p className="text-sm font-medium">정답: {problem.correctAnswer}</p>
+      {/* Answer + Explanation + Learning point (only after showAnswer or correct) */}
+      {(showAnswer || result === 'correct') && (
+        <div className="mt-4 space-y-3">
+          {result === 'wrong' && (
+            <div className="p-4 bg-primary-light rounded-lg">
+              <p className="text-sm font-medium">정답: {problem.correctAnswer}</p>
+            </div>
+          )}
+          <div className="p-4 bg-surface border border-border rounded-lg">
+            <p className="text-sm font-medium mb-1">해설:</p>
+            <p className="text-sm text-text-sub">{problem.explanation}</p>
+          </div>
+          <div className="p-4 bg-primary-light/50 rounded-lg">
+            <p className="text-sm">
+              <span className="font-medium text-primary">학습 포인트:</span>{' '}
+              <span className="text-text-sub">{problem.learningPoint}</span>
+            </p>
+          </div>
         </div>
       )}
     </div>

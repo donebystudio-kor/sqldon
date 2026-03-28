@@ -92,26 +92,32 @@ export default function WriteCard({ problem, onResult }: Props) {
           }`}
         >
           <p className="font-medium">{result === 'correct' ? '정답입니다!' : '오답입니다.'}</p>
-          {result === 'wrong' && (
-            <p className="text-sm mt-1 text-text-sub">{problem.explanation}</p>
+          {result === 'wrong' && !showAnswer && (
+            <p className="text-sm mt-2 text-text-sub">힌트를 확인하거나 정답을 확인해보세요.</p>
           )}
         </div>
       )}
 
-      {/* Hints */}
-      {result === null && (
-        <HintSteps
-          hints={problem.hints}
-          onShowAnswer={() => setShowAnswer(true)}
-        />
-      )}
+      {/* Hints - always available, answer button shows after submit */}
+      <HintSteps
+        hints={problem.hints}
+        submitted={result !== null}
+        onShowAnswer={() => setShowAnswer(true)}
+      />
 
+      {/* Answer + Explanation (only after showAnswer) */}
       {showAnswer && (
-        <div className="mt-4 p-4 bg-primary-light rounded-lg">
-          <p className="text-sm font-medium mb-2">정답 예시:</p>
-          <pre className="bg-code-bg text-code-text rounded-lg p-4 font-mono text-sm overflow-x-auto">
-            {problem.acceptableAnswers[0]}
-          </pre>
+        <div className="mt-4 space-y-3">
+          <div className="p-4 bg-primary-light rounded-lg">
+            <p className="text-sm font-medium mb-2">정답 예시:</p>
+            <pre className="bg-code-bg text-code-text rounded-lg p-4 font-mono text-sm overflow-x-auto">
+              {problem.acceptableAnswers[0]}
+            </pre>
+          </div>
+          <div className="p-4 bg-surface border border-border rounded-lg">
+            <p className="text-sm font-medium mb-1">해설:</p>
+            <p className="text-sm text-text-sub">{problem.explanation}</p>
+          </div>
         </div>
       )}
     </div>

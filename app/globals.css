@@ -2,12 +2,15 @@
 
 @theme inline {
   --color-primary: #2563EB;
-  --color-primary-light: #DBEAFE;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-light: #EFF6FF;
   --color-surface: #FFFFFF;
   --color-bg: #F8FAFC;
   --color-border: #E2E8F0;
-  --color-text: #1E293B;
+  --color-border-hover: #CBD5E1;
+  --color-text: #0F172A;
   --color-text-sub: #64748B;
+  --color-text-muted: #94A3B8;
   --color-success: #16A34A;
   --color-error: #DC2626;
   --color-warning: #D97706;
@@ -19,8 +22,25 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 pre, code {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Smooth transitions for accordion */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.accordion-content.open {
+  grid-template-rows: 1fr;
+}
+
+.accordion-inner {
+  overflow: hidden;
 }
