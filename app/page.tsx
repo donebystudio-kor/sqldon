@@ -28,12 +28,6 @@ export default function HomePage() {
           >
             기초부터 시작
           </Link>
-          <Link
-            href="/quiz/sql-basic"
-            className="border-2 border-primary text-primary px-7 py-3.5 rounded-xl hover:bg-primary-light active:scale-95 transition-all font-semibold text-base"
-          >
-            문제 풀기
-          </Link>
         </div>
 
         {/* Secondary CTA */}
