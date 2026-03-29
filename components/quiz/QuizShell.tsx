@@ -15,6 +15,8 @@ interface Props {
   problems: Problem[];
   category: CategoryId;
   categoryName: string;
+  filterDifficulty?: string;
+  filterType?: string;
 }
 
 const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
@@ -63,8 +65,13 @@ function getGlobalProgress(): { solved: number; total: number } {
   return { solved, total };
 }
 
-export default function QuizShell({ problems, category, categoryName }: Props) {
-  const availableProblems = problems.filter(p => p.type !== 'write');
+export default function QuizShell({ problems, category, categoryName, filterDifficulty, filterType }: Props) {
+  const availableProblems = problems.filter(p => {
+    if (p.type === 'write') return false;
+    if (filterDifficulty && filterDifficulty !== 'all' && p.difficulty !== filterDifficulty) return false;
+    if (filterType && filterType !== 'all' && p.type !== filterType) return false;
+    return true;
+  });
 
   const [index, setIndex] = useState(0);
   const [key, setKey] = useState(0);

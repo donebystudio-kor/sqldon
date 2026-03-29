@@ -23,10 +23,10 @@ export default function HomePage() {
         {/* Primary CTA */}
         <div className="flex justify-center gap-3 mb-4">
           <Link
-            href="/quiz/sql-basic"
+            href="/quiz"
             className="bg-primary text-white px-7 py-3.5 rounded-xl hover:bg-primary-hover active:scale-95 transition-all font-semibold text-base shadow-sm"
           >
-            기초부터 시작
+            문제 풀기
           </Link>
         </div>
 
