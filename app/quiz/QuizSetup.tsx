@@ -8,9 +8,9 @@ import type { Difficulty, CategoryId } from '@/types/problem';
 
 const DIFFICULTY_OPTIONS: { value: Difficulty | 'all'; label: string; desc: string }[] = [
   { value: 'all', label: '전체', desc: '모든 난이도' },
-  { value: 'basic', label: '기초', desc: 'WHERE, ORDER BY, 단순 조인' },
-  { value: 'intermediate', label: '중급', desc: 'BETWEEN, LIKE, LEFT JOIN, GROUP BY' },
-  { value: 'advanced', label: '고급', desc: 'SELF JOIN, 다중 조인, 서브쿼리' },
+  { value: 'basic', label: '기초', desc: '핵심 개념 위주' },
+  { value: 'intermediate', label: '중급', desc: '조건 복합, 응용' },
+  { value: 'advanced', label: '고급', desc: '복합 쿼리, 심화' },
 ];
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
