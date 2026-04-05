@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
 
 export const SQL_SUBQUERY_PROBLEMS = [
   {
@@ -57,6 +57,934 @@ export const SQL_SUBQUERY_PROBLEMS = [
       misconception: ['EXISTS는 값 비교가 아닌 존재 여부를 확인합니다. IN은 값 목록과 비교합니다'],
     },
   } as FillProblem,
+  // ssf02 - basic / 이커머스 / IN
+  {
+    id: 'ssf02',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '특정 카테고리 상품을 주문한 고객 조회',
+    question: '아래 SQL의 빈칸을 채워 "전자기기" 카테고리 상품을 주문한 적 있는 고객의 user_id를 조회하세요.',
+    learningPoint: 'IN 서브쿼리로 다중 값 목록에 속하는 행을 필터링하는 패턴',
+    tags: ['IN', '서브쿼리', '다중행'],
+    explanation: 'IN 연산자는 서브쿼리가 반환하는 여러 값 목록 중 하나라도 일치하면 조건을 만족합니다. 서브쿼리가 여러 행을 반환할 때 = 대신 IN을 사용해야 합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT DISTINCT user_id FROM orders WHERE product_id ___ (SELECT product_id FROM products WHERE category = '전자기기');",
+    blanks: 1,
+    options: ['IN', 'NOT IN', '=', '>', 'EXISTS', 'LIKE'],
+    optionExplanations: [
+      { value: 'IN', explanation: '서브쿼리가 반환하는 여러 product_id 목록과 일치하는지 확인합니다. 다중 행 서브쿼리에 적합합니다' },
+      { value: 'NOT IN', explanation: '목록에 없는 경우를 필터링합니다. 전자기기를 주문하지 않은 고객이 조회됩니다' },
+      { value: '=', explanation: '단일 값 비교에만 사용합니다. 서브쿼리가 여러 행을 반환하면 오류가 발생합니다' },
+      { value: '>', explanation: '숫자 크기 비교에 사용합니다. product_id 목록 비교에는 적합하지 않습니다' },
+      { value: 'EXISTS', explanation: '서브쿼리 결과가 존재하는지 확인합니다. 상관 서브쿼리 형태로 작성해야 합니다' },
+      { value: 'LIKE', explanation: '문자열 패턴 매칭에 사용합니다. 목록 비교와는 관계없습니다' },
+    ],
+    correctAnswers: ['IN'],
+    hints: {
+      directional: ['서브쿼리가 여러 product_id를 반환합니다. 여러 값 목록과 비교할 때 사용하는 연산자를 고르세요'],
+      constraint: ['단일 값 비교 연산자(=)는 서브쿼리가 여러 행을 반환할 때 오류가 납니다'],
+      misconception: ['EXISTS는 값 자체를 비교하지 않고, 서브쿼리 결과가 존재하는지만 확인합니다'],
+    },
+  } as FillProblem,
+
+  // ssf03 - basic / 구독 / NOT IN
+  {
+    id: 'ssf03',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '구독 중이 아닌 사용자 찾기',
+    question: '아래 SQL의 빈칸을 채워 현재 구독 중인 사용자(subscriptions 테이블에 있는 user_id)를 제외한 나머지 사용자 목록을 조회하세요.',
+    learningPoint: 'NOT IN 서브쿼리로 특정 집합에 속하지 않는 행을 필터링하는 패턴',
+    tags: ['NOT IN', '서브쿼리', '제외'],
+    explanation: 'NOT IN은 서브쿼리가 반환하는 값 목록에 포함되지 않는 행만 반환합니다. 단, 서브쿼리 결과에 NULL이 포함되면 전체 결과가 빈 집합이 될 수 있으니 주의해야 합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT user_id FROM users WHERE user_id ___ (SELECT user_id FROM subscriptions);',
+    blanks: 1,
+    options: ['NOT IN', 'IN', '<>', '!=', 'NOT EXISTS', 'EXCEPT'],
+    optionExplanations: [
+      { value: 'NOT IN', explanation: '서브쿼리가 반환하는 user_id 목록에 없는 사용자만 반환합니다. 구독 중이 아닌 사용자를 찾는 데 적합합니다' },
+      { value: 'IN', explanation: '서브쿼리 목록에 포함된 값을 반환합니다. 구독 중인 사용자가 조회됩니다' },
+      { value: '<>', explanation: '단일 값 비교 연산자입니다. 서브쿼리가 여러 행을 반환하면 오류가 발생합니다' },
+      { value: '!=', explanation: '<>와 동일하게 단일 값 비교에만 사용합니다. 다중 행 서브쿼리에는 사용할 수 없습니다' },
+      { value: 'NOT EXISTS', explanation: '상관 서브쿼리 형태로 존재 여부를 확인합니다. 이 SQL 구조에서는 바로 사용할 수 없습니다' },
+      { value: 'EXCEPT', explanation: 'SQL 집합 연산자로 두 쿼리 결과의 차집합을 구합니다. WHERE 절 안에서는 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['NOT IN'],
+    hints: {
+      directional: ['구독 중인 사용자를 제외하려면 목록에 "없는" 경우를 거르는 연산자가 필요합니다'],
+      constraint: ['비교 연산자(<>, !=)는 서브쿼리가 여러 행을 반환할 때 사용할 수 없습니다'],
+      misconception: ['NOT IN의 서브쿼리 결과에 NULL이 포함되면 모든 행이 제외될 수 있으니 실무에서는 주의가 필요합니다'],
+    },
+  } as FillProblem,
+
+  // ssf04 - basic / 게임 / scalar subquery (WHERE)
+  {
+    id: 'ssf04',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '최고 점수 기록자 찾기',
+    question: '아래 SQL의 빈칸을 채워 scores 테이블에서 최고 점수(MAX)를 받은 user_id를 조회하세요.',
+    learningPoint: '스칼라 서브쿼리를 WHERE 절 비교 연산에 사용하는 패턴',
+    tags: ['스칼라 서브쿼리', 'WHERE', 'MAX'],
+    explanation: '스칼라 서브쿼리는 정확히 하나의 행과 하나의 컬럼을 반환합니다. MAX()처럼 집계 함수 결과를 = 연산자로 비교할 때 사용합니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT user_id FROM scores WHERE score = (SELECT ___ (score) FROM scores);',
+    blanks: 1,
+    options: ['MAX', 'MIN', 'AVG', 'SUM', 'COUNT', 'TOP'],
+    optionExplanations: [
+      { value: 'MAX', explanation: '가장 큰 score 값 하나를 반환합니다. 스칼라 서브쿼리로 = 비교가 가능합니다' },
+      { value: 'MIN', explanation: '가장 작은 score 값을 반환합니다. 최저 점수 보유자를 조회하게 됩니다' },
+      { value: 'AVG', explanation: '평균 점수를 반환합니다. 평균과 동일한 점수를 가진 사용자를 조회하게 됩니다' },
+      { value: 'SUM', explanation: '전체 점수 합계를 반환합니다. 개별 점수와 비교하는 것은 의미가 없습니다' },
+      { value: 'COUNT', explanation: '행의 수를 반환합니다. 점수 값 비교에는 사용할 수 없습니다' },
+      { value: 'TOP', explanation: 'SQL Server에서 특정 개수의 행을 반환하는 키워드입니다. 함수가 아니라 서브쿼리 안에서 이렇게 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['MAX'],
+    hints: {
+      directional: ['score 값이 가장 큰 사람을 찾으려면 서브쿼리에서 어떤 집계 함수를 써야 할까요?'],
+      constraint: ['스칼라 서브쿼리는 단일 값을 반환해야 합니다. 집계 함수를 사용하세요'],
+      misconception: ['COUNT는 행의 개수를 세며, 점수 값 자체를 반환하지 않습니다'],
+    },
+  } as FillProblem,
+
+  // ssf05 - basic / 배달 / IN
+  {
+    id: 'ssf05',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '고평점 음식점 주문만 보기',
+    question: '아래 SQL의 빈칸을 채워 평균 평점(avg_rating)이 4.5 이상인 음식점에서 발생한 주문 목록을 조회하세요.',
+    learningPoint: 'IN 서브쿼리로 조건을 만족하는 FK 목록을 먼저 구한 뒤 메인 테이블을 필터링하는 패턴',
+    tags: ['IN', '서브쿼리', '필터링'],
+    explanation: 'restaurants 테이블에서 조건을 만족하는 restaurant_id를 먼저 구하고, orders 테이블에서 해당 ID 목록에 속하는 행만 IN으로 걸러냅니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT order_id, amount FROM orders WHERE restaurant_id ___ (SELECT restaurant_id FROM restaurants WHERE avg_rating ___ 4.5);',
+    blanks: 2,
+    options: ['IN', 'NOT IN', '>=', '>', '=', 'BETWEEN'],
+    optionExplanations: [
+      { value: 'IN', explanation: '서브쿼리가 반환하는 restaurant_id 목록에 속하는 주문을 필터링합니다' },
+      { value: 'NOT IN', explanation: '목록에 없는 경우를 선택합니다. 저평점 음식점 주문이 조회됩니다' },
+      { value: '>=', explanation: '크거나 같음 비교 연산자입니다. 평점 조건(4.5 이상)에 사용됩니다' },
+      { value: '>', explanation: '초과 비교 연산자입니다. 4.5를 포함하지 않으므로 조건에 정확히 맞지 않습니다' },
+      { value: '=', explanation: '단일 값 비교에 사용합니다. 서브쿼리가 여러 행을 반환하면 오류가 발생합니다' },
+      { value: 'BETWEEN', explanation: '범위 조건에 사용합니다. 여기서는 단방향 조건(이상)이므로 BETWEEN은 불필요합니다' },
+    ],
+    correctAnswers: ['IN', '>='],
+    hints: {
+      directional: ['첫 번째 빈칸: orders에서 여러 restaurant_id와 비교해야 합니다. 두 번째 빈칸: 4.5 이상 조건입니다'],
+      constraint: ['4.5 이상은 4.5를 포함하므로 >가 아니라 >=를 사용합니다'],
+      misconception: ['= 연산자는 서브쿼리가 단일 값을 반환할 때만 사용할 수 있습니다'],
+    },
+  } as FillProblem,
+
+  // ssf06 - intermediate / 병원 / EXISTS
+  {
+    id: 'ssf06',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '예약이 존재하는 의사 목록 조회',
+    question: '아래 SQL의 빈칸을 채워 appointments 테이블에 예약이 하나 이상 존재하는 의사(doctors)만 조회하세요.',
+    learningPoint: 'EXISTS 상관 서브쿼리로 관련 데이터가 존재하는 경우만 필터링하는 패턴',
+    tags: ['EXISTS', '상관 서브쿼리'],
+    explanation: 'EXISTS는 서브쿼리가 하나 이상의 행을 반환하면 TRUE를 반환합니다. 상관 서브쿼리로 작성하여 외부 쿼리의 각 의사마다 해당 예약이 있는지 확인합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT doctor_id, dept FROM doctors d WHERE ___ (SELECT 1 FROM appointments a WHERE a.doctor_id = d.doctor_id);',
+    blanks: 1,
+    options: ['EXISTS', 'NOT EXISTS', 'IN', 'NOT IN', 'ANY', 'ALL'],
+    optionExplanations: [
+      { value: 'EXISTS', explanation: '서브쿼리에 결과가 하나라도 있으면 TRUE를 반환합니다. 예약이 있는 의사를 찾는 데 적합합니다' },
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없을 때 TRUE를 반환합니다. 예약이 없는 의사가 조회됩니다' },
+      { value: 'IN', explanation: '값 목록 비교에 사용합니다. 이 구조에서는 SELECT 1이 값 목록으로 동작하지 않습니다' },
+      { value: 'NOT IN', explanation: 'IN의 반대로 목록에 없는 경우를 선택합니다. 이 구조에서는 EXISTS가 더 적합합니다' },
+      { value: 'ANY', explanation: '비교 연산자와 함께 서브쿼리 결과 중 하나라도 만족하면 TRUE. 단독으로는 사용할 수 없습니다' },
+      { value: 'ALL', explanation: '서브쿼리의 모든 결과를 만족해야 TRUE. 단독으로는 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['EXISTS'],
+    hints: {
+      directional: ['서브쿼리 결과가 "존재하는지"를 확인하는 연산자입니다. SELECT 1은 값보다 존재 여부를 체크할 때 관용적으로 씁니다'],
+      constraint: ['외부 쿼리의 d.doctor_id를 서브쿼리에서 참조하는 상관 서브쿼리 형태입니다'],
+      misconception: ['IN은 실제 값 목록과 비교합니다. SELECT 1은 항상 1을 반환하므로 IN 비교에는 적합하지 않습니다'],
+    },
+  } as FillProblem,
+
+  // ssf07 - intermediate / 광고 / NOT EXISTS
+  {
+    id: 'ssf07',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '클릭 이벤트가 없는 광고 캠페인 찾기',
+    question: '아래 SQL의 빈칸을 채워 ad_logs에 클릭(click) 이벤트가 한 건도 없는 캠페인을 조회하세요.',
+    learningPoint: 'NOT EXISTS로 상관 서브쿼리의 결과가 없는 경우를 필터링하는 패턴',
+    tags: ['NOT EXISTS', '상관 서브쿼리'],
+    explanation: 'NOT EXISTS는 서브쿼리가 아무 행도 반환하지 않을 때 TRUE가 됩니다. 클릭 로그가 없는 광고를 찾는 것처럼 "관련 데이터가 없는 경우"를 조회할 때 유용합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT ad_id, budget FROM campaigns c WHERE ___ (SELECT 1 FROM ad_logs l WHERE l.ad_id = c.ad_id AND l.event_type = 'click');",
+    blanks: 1,
+    options: ['NOT EXISTS', 'EXISTS', 'NOT IN', 'IN', 'IS NULL', 'IS NOT NULL'],
+    optionExplanations: [
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없을 때 TRUE를 반환합니다. 클릭 로그가 없는 광고를 찾는 데 정확히 맞습니다' },
+      { value: 'EXISTS', explanation: '결과가 존재하면 TRUE입니다. 클릭 이벤트가 있는 광고가 조회됩니다' },
+      { value: 'NOT IN', explanation: '값 목록에 없는 경우를 선택합니다. NULL 처리 문제가 있으며, 이 구조와는 맞지 않습니다' },
+      { value: 'IN', explanation: '값 목록에 있는 경우를 선택합니다. SELECT 1 결과와 값 비교는 의미가 없습니다' },
+      { value: 'IS NULL', explanation: '컬럼 값이 NULL인지 확인합니다. 서브쿼리 앞에는 사용할 수 없습니다' },
+      { value: 'IS NOT NULL', explanation: '컬럼 값이 NULL이 아닌지 확인합니다. 서브쿼리 앞에는 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['NOT EXISTS'],
+    hints: {
+      directional: ['클릭 로그가 "없는" 경우를 찾습니다. 서브쿼리 결과가 존재하지 않을 때 TRUE가 되는 연산자를 고르세요'],
+      constraint: ['상관 서브쿼리에서 c.ad_id를 참조하고 있으므로 EXISTS 계열 연산자를 사용해야 합니다'],
+      misconception: ['NOT IN과 NOT EXISTS는 비슷해 보이지만, NOT IN은 서브쿼리 결과에 NULL이 있으면 모든 행이 제외되는 문제가 있습니다'],
+    },
+  } as FillProblem,
+
+  // ssf08 - intermediate / 이커머스 / scalar subquery (SELECT)
+  {
+    id: 'ssf08',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '각 주문의 카테고리 정보를 스칼라 서브쿼리로 추가',
+    question: '아래 SQL의 빈칸을 채워 orders 테이블의 각 행에 해당 product_id의 카테고리(category)를 함께 출력하세요.',
+    learningPoint: 'SELECT 절에 스칼라 서브쿼리를 사용하여 단일 값을 컬럼처럼 추가하는 패턴',
+    tags: ['스칼라 서브쿼리', 'SELECT 절'],
+    explanation: 'SELECT 절의 스칼라 서브쿼리는 각 행마다 단일 값을 반환합니다. 반드시 단일 행·단일 열만 반환해야 하며, 여러 행을 반환하면 오류가 발생합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT order_id, amount, (SELECT ___ FROM products p WHERE p.product_id = o.product_id) AS product_category FROM orders o;',
+    blanks: 1,
+    options: ['category', 'product_id', 'price', 'COUNT(*)', 'MAX(price)', '*'],
+    optionExplanations: [
+      { value: 'category', explanation: '각 상품의 카테고리 이름을 단일 값으로 반환합니다. 스칼라 서브쿼리에 적합합니다' },
+      { value: 'product_id', explanation: '상품 ID를 반환합니다. 이미 WHERE 조건에 쓰인 값이라 의미 없는 중복 컬럼이 됩니다' },
+      { value: 'price', explanation: '상품 가격을 반환합니다. 카테고리를 가져오는 목적과 다릅니다' },
+      { value: 'COUNT(*)', explanation: '행의 수를 반환합니다. product_id 하나에 상품이 하나뿐이면 항상 1이 되어 의미가 없습니다' },
+      { value: 'MAX(price)', explanation: '최대 가격을 반환합니다. 카테고리 정보를 가져오는 목적과 다릅니다' },
+      { value: '*', explanation: '모든 컬럼을 반환합니다. 스칼라 서브쿼리는 단일 컬럼만 반환해야 하므로 오류가 발생합니다' },
+    ],
+    correctAnswers: ['category'],
+    hints: {
+      directional: ['AS product_category 별칭을 보면 어떤 값을 가져와야 할지 알 수 있습니다'],
+      constraint: ['스칼라 서브쿼리는 반드시 단일 컬럼만 반환해야 합니다. *는 사용할 수 없습니다'],
+      misconception: ['집계 함수를 써도 단일 값이 되지만, 여기서는 카테고리 텍스트를 가져와야 합니다'],
+    },
+  } as FillProblem,
+
+  // ssf09 - intermediate / 구독 / inline view (FROM)
+  {
+    id: 'ssf09',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '인라인 뷰로 플랜별 평균 구독 기간 구하기',
+    question: '아래 SQL의 빈칸을 채워 subscriptions 테이블을 인라인 뷰로 만들어 각 plan_id별 구독 건수를 조회하세요.',
+    learningPoint: 'FROM 절에 인라인 뷰(서브쿼리)를 사용하여 집계 결과를 임시 테이블처럼 활용하는 패턴',
+    tags: ['인라인 뷰', 'FROM 절', '서브쿼리'],
+    explanation: 'FROM 절의 서브쿼리를 인라인 뷰라고 합니다. 복잡한 집계를 먼저 서브쿼리로 처리한 뒤 외부 쿼리에서 단순히 조회할 수 있어 가독성이 높아집니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT plan_id, sub_count FROM (SELECT plan_id, COUNT(*) AS sub_count FROM subscriptions ___ plan_id) AS plan_stats;',
+    blanks: 1,
+    options: ['GROUP BY', 'ORDER BY', 'WHERE', 'HAVING', 'PARTITION BY', 'DISTINCT'],
+    optionExplanations: [
+      { value: 'GROUP BY', explanation: 'plan_id별로 행을 묶어 COUNT(*)가 각 그룹의 건수를 반환하게 합니다. 인라인 뷰 내 집계에 필수입니다' },
+      { value: 'ORDER BY', explanation: '정렬 키워드입니다. 행을 묶지 않으므로 COUNT(*)가 전체 건수만 반환하여 결과가 의도와 다릅니다' },
+      { value: 'WHERE', explanation: '행 필터링 키워드입니다. plan_id라는 컬럼 이름 앞에 WHERE를 쓰면 문법 오류가 발생합니다' },
+      { value: 'HAVING', explanation: 'GROUP BY 이후의 그룹 필터링에 사용합니다. GROUP BY 없이 HAVING만 사용하면 오류가 됩니다' },
+      { value: 'PARTITION BY', explanation: '윈도우 함수의 파티션 지정에 사용합니다. 일반 집계 쿼리에서는 사용할 수 없습니다' },
+      { value: 'DISTINCT', explanation: '중복 제거 키워드입니다. plan_id별 집계를 위해서는 GROUP BY가 필요합니다' },
+    ],
+    correctAnswers: ['GROUP BY'],
+    hints: {
+      directional: ['plan_id별 COUNT(*)를 구하려면 plan_id로 그룹을 만들어야 합니다'],
+      constraint: ['집계 함수(COUNT)를 각 plan_id별로 계산하려면 어떤 절이 필요한지 생각해보세요'],
+      misconception: ['HAVING은 GROUP BY 다음에만 사용할 수 있습니다. 단독으로는 사용할 수 없습니다'],
+    },
+  } as FillProblem,
+
+  // ssf10 - intermediate / 게임 / NOT IN
+  {
+    id: 'ssf10',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '특정 날짜에 플레이하지 않은 유저 찾기',
+    question: "아래 SQL의 빈칸을 채워 2024-01-01에 게임을 플레이한 기록이 없는 user_id를 users 테이블에서 조회하세요.",
+    learningPoint: 'NOT IN 서브쿼리로 특정 이벤트에 참여하지 않은 대상을 찾는 패턴',
+    tags: ['NOT IN', '서브쿼리', '부재 조건'],
+    explanation: "NOT IN은 서브쿼리가 반환한 값 목록에 포함되지 않는 행을 선택합니다. 특정 날짜의 scores 기록이 없는 유저를 찾으려면 그 날짜의 user_id 목록을 서브쿼리로 구한 뒤 NOT IN으로 제외합니다.",
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT user_id FROM users WHERE user_id ___ (SELECT ___ FROM scores WHERE played_at = '2024-01-01');",
+    blanks: 2,
+    options: ['NOT IN', 'IN', 'user_id', 'score', 'COUNT(*)', 'played_at'],
+    optionExplanations: [
+      { value: 'NOT IN', explanation: '서브쿼리가 반환하는 user_id 목록에 없는 사용자를 선택합니다. 플레이하지 않은 유저를 찾는 데 적합합니다' },
+      { value: 'IN', explanation: '목록에 포함된 경우를 선택합니다. 해당 날짜에 플레이한 유저가 조회됩니다' },
+      { value: 'user_id', explanation: '서브쿼리에서 반환할 컬럼입니다. 외부 쿼리의 user_id와 비교할 값이어야 합니다' },
+      { value: 'score', explanation: '점수 값을 반환합니다. user_id와 score는 타입이 다를 수 있어 비교 대상으로 부적합합니다' },
+      { value: 'COUNT(*)', explanation: '행 개수를 반환합니다. 단일 숫자가 되어 NOT IN 비교 의미가 없어집니다' },
+      { value: 'played_at', explanation: '날짜 값을 반환합니다. user_id와 날짜를 비교하면 의미 없는 결과가 나옵니다' },
+    ],
+    correctAnswers: ['NOT IN', 'user_id'],
+    hints: {
+      directional: ['첫 번째 빈칸: 목록에 없는 경우를 고릅니다. 두 번째 빈칸: 외부 쿼리의 user_id와 비교할 컬럼을 선택하세요'],
+      constraint: ['서브쿼리에서 반환하는 컬럼과 외부 쿼리에서 비교하는 컬럼이 같은 의미여야 합니다'],
+      misconception: ['NOT IN 서브쿼리 결과에 NULL이 있으면 전체 결과가 비어 버립니다. 실무에서는 NOT EXISTS가 더 안전합니다'],
+    },
+  } as FillProblem,
+
+  // ssf11 - intermediate / 배달 / EXISTS
+  {
+    id: 'ssf11',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '주문이 있는 음식점만 조회',
+    question: '아래 SQL의 빈칸을 채워 실제 주문이 하나 이상 들어온 음식점(restaurants)만 조회하세요.',
+    learningPoint: 'EXISTS 상관 서브쿼리로 연관된 데이터가 있는 부모 레코드를 필터링하는 패턴',
+    tags: ['EXISTS', '상관 서브쿼리', '필터링'],
+    explanation: 'EXISTS(서브쿼리)는 서브쿼리가 하나 이상의 행을 반환하면 TRUE입니다. 외부 쿼리의 r.restaurant_id를 서브쿼리에서 참조하는 상관 서브쿼리 형태로, 음식점별로 주문이 있는지 확인합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT restaurant_id, category FROM restaurants r WHERE EXISTS (SELECT 1 FROM orders o WHERE o.restaurant_id = ___ );',
+    blanks: 1,
+    options: ['r.restaurant_id', 'o.restaurant_id', 'restaurant_id', 'r.category', 'o.amount', '1'],
+    optionExplanations: [
+      { value: 'r.restaurant_id', explanation: '외부 쿼리의 음식점 ID를 서브쿼리에서 참조합니다. 이렇게 해야 각 음식점마다 해당 주문이 있는지 확인하는 상관 서브쿼리가 됩니다' },
+      { value: 'o.restaurant_id', explanation: '서브쿼리 내부 컬럼끼리 비교하는 형태가 됩니다. 외부 쿼리와 연결이 없어 상관 서브쿼리가 아닌 독립 서브쿼리가 됩니다' },
+      { value: 'restaurant_id', explanation: '테이블 별칭 없이 컬럼명만 쓰면 어느 테이블인지 모호해집니다. 두 테이블 모두에 같은 컬럼이 있으면 오류가 발생합니다' },
+      { value: 'r.category', explanation: '카테고리 컬럼을 restaurant_id와 비교하는 형태가 되어 데이터 타입 불일치 또는 의미 없는 비교가 됩니다' },
+      { value: 'o.amount', explanation: '주문 금액을 restaurant_id와 비교하는 형태가 되어 의미 없는 비교가 됩니다' },
+      { value: '1', explanation: '상수 1은 restaurant_id와 비교하면 의미가 없고, 모든 행이 TRUE 또는 FALSE로 처리됩니다' },
+    ],
+    correctAnswers: ['r.restaurant_id'],
+    hints: {
+      directional: ['서브쿼리에서 외부 쿼리의 음식점 ID를 참조해야 상관 서브쿼리가 됩니다. 어떤 별칭을 써야 할까요?'],
+      constraint: ['r은 restaurants의 별칭, o는 orders의 별칭입니다. 외부 쿼리와 연결하려면 외부 테이블의 별칭을 사용해야 합니다'],
+      misconception: ['o.restaurant_id = o.restaurant_id 형태는 항상 TRUE가 되어 모든 음식점이 조회됩니다'],
+    },
+  } as FillProblem,
+
+  // ssf12 - advanced / 병원 / scalar subquery (WHERE) + 상관
+  {
+    id: 'ssf12',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '예약 건수가 해당 과 평균보다 많은 의사 찾기',
+    question: '아래 SQL의 빈칸을 채워 각 의사의 예약 건수가 자신이 속한 과(dept)의 평균 예약 건수보다 많은 의사를 조회하세요.',
+    learningPoint: '상관 스칼라 서브쿼리로 "같은 그룹 내 평균"과 비교하는 패턴',
+    tags: ['상관 서브쿼리', '스칼라 서브쿼리', 'AVG', '그룹 비교'],
+    explanation: '이중 상관 서브쿼리 패턴입니다. 바깥 서브쿼리는 각 의사의 예약 수를 집계하고, 안쪽 서브쿼리는 같은 dept에 속한 모든 의사의 평균 예약 수를 구합니다. 두 값을 비교하여 평균 초과 의사를 필터링합니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT doctor_id, dept FROM doctors d WHERE (SELECT COUNT(*) FROM appointments a WHERE a.doctor_id = d.doctor_id) > (SELECT ___ (cnt) FROM (SELECT COUNT(*) AS cnt FROM appointments a2 WHERE a2.doctor_id IN (SELECT doctor_id FROM doctors d2 WHERE d2.dept = d.dept) ) AS dept_counts);',
+    blanks: 1,
+    options: ['AVG', 'MAX', 'MIN', 'SUM', 'COUNT', 'MEDIAN'],
+    optionExplanations: [
+      { value: 'AVG', explanation: '과별 모든 의사의 예약 건수 평균을 구합니다. 개인 건수가 평균을 초과하는지 비교하는 데 정확히 맞습니다' },
+      { value: 'MAX', explanation: '과 내 가장 많은 예약 건수를 반환합니다. 최대값보다 많은 사람은 없으므로 결과가 항상 비게 됩니다' },
+      { value: 'MIN', explanation: '과 내 가장 적은 예약 건수를 반환합니다. 최소값보다 많으면 거의 모든 의사가 조회됩니다' },
+      { value: 'SUM', explanation: '과 내 전체 예약 건수 합계를 반환합니다. 개인 건수와 합계를 비교하는 것은 의미가 없습니다' },
+      { value: 'COUNT', explanation: '인라인 뷰의 행 수를 세어 과에 속한 의사 수를 반환합니다. 평균 예약 건수가 아닙니다' },
+      { value: 'MEDIAN', explanation: '중앙값을 반환하는 함수입니다. 표준 SQL에서는 지원하지 않는 DBMS가 많습니다' },
+    ],
+    correctAnswers: ['AVG'],
+    hints: {
+      directional: ['과 내 의사들의 예약 건수 평균과 비교해야 합니다. 집계 함수 중 평균을 구하는 것은 무엇인가요?'],
+      constraint: ['인라인 뷰의 cnt 컬럼은 각 의사의 예약 건수입니다. 그 cnt들의 평균이 필요합니다'],
+      misconception: ['MAX를 사용하면 본인이 최고 기록 보유자가 아닌 이상 항상 FALSE가 되어 결과가 비게 됩니다'],
+    },
+  } as FillProblem,
+
+  // ssf13 - advanced / 광고 / NOT EXISTS + 다중 조건
+  {
+    id: 'ssf13',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '노출됐지만 전환이 없는 광고 캠페인 감지',
+    question: "아래 SQL의 빈칸을 채워 노출(impression) 이벤트는 있지만 전환(conversion) 이벤트는 한 건도 없는 광고(ad_id)를 조회하세요.",
+    learningPoint: 'EXISTS와 NOT EXISTS를 함께 사용하여 두 가지 조건을 동시에 만족하는 경우를 필터링하는 패턴',
+    tags: ['EXISTS', 'NOT EXISTS', '상관 서브쿼리', '다중 조건'],
+    explanation: '두 개의 상관 서브쿼리를 AND로 연결합니다. 첫 번째는 노출이 있는지(EXISTS), 두 번째는 전환이 없는지(NOT EXISTS)를 각각 확인합니다. 이 패턴은 "A가 있고 B는 없는" 경우를 정확히 표현합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT ad_id, budget FROM campaigns c WHERE ___ (SELECT 1 FROM ad_logs l1 WHERE l1.ad_id = c.ad_id AND l1.event_type = 'impression') AND ___ (SELECT 1 FROM ad_logs l2 WHERE l2.ad_id = c.ad_id AND l2.event_type = 'conversion');",
+    blanks: 2,
+    options: ['EXISTS', 'NOT EXISTS', 'IN', 'NOT IN', 'ANY', 'ALL'],
+    optionExplanations: [
+      { value: 'EXISTS', explanation: '서브쿼리에 결과가 있으면 TRUE입니다. 노출 이벤트가 존재하는 광고를 선택하는 데 사용합니다' },
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없으면 TRUE입니다. 전환 이벤트가 없는 광고를 선택하는 데 사용합니다' },
+      { value: 'IN', explanation: '값 목록 비교에 사용합니다. SELECT 1 결과와는 EXISTS 방식이 더 적합합니다' },
+      { value: 'NOT IN', explanation: '값 목록 제외에 사용합니다. NULL 처리 문제가 있으며, 이 구조에서는 NOT EXISTS가 더 안전합니다' },
+      { value: 'ANY', explanation: '비교 연산자와 함께 사용해야 합니다. 단독으로 서브쿼리 앞에 올 수 없습니다' },
+      { value: 'ALL', explanation: '비교 연산자와 함께 사용해야 합니다. 단독으로 서브쿼리 앞에 올 수 없습니다' },
+    ],
+    correctAnswers: ['EXISTS', 'NOT EXISTS'],
+    hints: {
+      directional: ['첫 번째 빈칸: 노출이 "있는" 경우, 두 번째 빈칸: 전환이 "없는" 경우를 찾습니다'],
+      constraint: ['AND로 두 조건을 연결합니다. 각각 "있음"과 "없음"을 나타내는 EXISTS 계열 연산자를 사용합니다'],
+      misconception: ['NOT IN은 서브쿼리 결과에 NULL이 있으면 전체 결과가 비게 되는 위험이 있습니다. NOT EXISTS가 더 안전합니다'],
+    },
+  } as FillProblem,
+
+  // ssf14 - advanced / 이커머스 / inline view + 집계
+  {
+    id: 'ssf14',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '카테고리별 최고 매출 상품만 추출',
+    question: '아래 SQL의 빈칸을 채워 각 카테고리에서 주문 금액 합계가 가장 높은 상품 하나씩을 추출하세요.',
+    learningPoint: '인라인 뷰로 집계한 결과와 상관 스칼라 서브쿼리를 결합하여 그룹 내 최대값을 갖는 행만 추출하는 패턴',
+    tags: ['인라인 뷰', '상관 서브쿼리', 'MAX', '그룹 최대'],
+    explanation: '인라인 뷰로 상품별 주문 금액 합계를 구한 뒤, WHERE 절에서 같은 카테고리 내 최대 합계와 비교하여 그룹 내 1위 상품만 필터링합니다. 윈도우 함수가 없을 때 자주 사용하는 패턴입니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT product_id, category, total_amount FROM (SELECT p.product_id, p.category, SUM(o.amount) AS total_amount FROM products p JOIN orders o ON p.product_id = o.product_id GROUP BY p.product_id, p.category) AS sales WHERE total_amount = (SELECT ___ (total_amount) FROM (SELECT p2.product_id, p2.category, SUM(o2.amount) AS total_amount FROM products p2 JOIN orders o2 ON p2.product_id = o2.product_id GROUP BY p2.product_id, p2.category) AS sales2 WHERE sales2.___ = sales.category);',
+    blanks: 2,
+    options: ['MAX', 'MIN', 'category', 'product_id', 'SUM', 'total_amount'],
+    optionExplanations: [
+      { value: 'MAX', explanation: '같은 카테고리 내 가장 높은 total_amount 값을 반환합니다. 카테고리별 최고 매출 상품을 찾는 데 필요합니다' },
+      { value: 'MIN', explanation: '가장 낮은 값을 반환합니다. 카테고리별 최저 매출 상품이 조회됩니다' },
+      { value: 'category', explanation: '서브쿼리 내 sales2에서 외부 쿼리의 category와 같은 카테고리를 필터링하는 데 사용합니다' },
+      { value: 'product_id', explanation: '상품 ID 컬럼입니다. 카테고리 필터링에는 category 컬럼이 필요합니다' },
+      { value: 'SUM', explanation: '합계를 구합니다. 이미 total_amount가 합계이므로 SUM(total_amount)는 의미가 다릅니다' },
+      { value: 'total_amount', explanation: '금액 합계 컬럼입니다. 여기서는 MAX() 안에 들어가는 컬럼으로 사용되거나, 카테고리 비교에 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['MAX', 'category'],
+    hints: {
+      directional: ['첫 번째 빈칸: 같은 카테고리 내 최고 매출을 구하는 집계 함수, 두 번째 빈칸: 같은 카테고리를 연결하는 컬럼명입니다'],
+      constraint: ['두 번째 빈칸은 WHERE 조건에서 sales2 테이블의 어떤 컬럼이 외부의 sales.category와 같아야 하는지 결정합니다'],
+      misconception: ['SUM(total_amount)는 이미 집계된 값에 다시 SUM을 취하는 것이라 의미가 다릅니다. MAX(total_amount)가 올바릅니다'],
+    },
+  } as FillProblem,
+
+  // ssf15 - advanced / 구독 / NOT IN + NULL 함정
+  {
+    id: 'ssf15',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'NULL 안전한 미구독 사용자 조회',
+    question: '아래 SQL에서 subscriptions.user_id에 NULL이 포함될 수 있을 때, 올바르게 미구독 사용자를 조회하려면 빈칸에 무엇이 들어가야 하는지 고르세요.',
+    learningPoint: 'NOT IN 서브쿼리에서 NULL이 포함될 때 결과가 항상 비는 문제를 NOT EXISTS로 안전하게 대체하는 패턴',
+    tags: ['NOT EXISTS', 'NULL 안전', '상관 서브쿼리', 'NOT IN'],
+    explanation: 'NOT IN은 서브쿼리 결과에 NULL이 하나라도 있으면 전체 결과가 비게 됩니다. NULL과의 비교는 항상 UNKNOWN이 되기 때문입니다. NOT EXISTS를 사용하면 NULL에 영향을 받지 않고 안전하게 부재를 확인할 수 있습니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT user_id FROM users u WHERE ___ (SELECT 1 FROM subscriptions s WHERE s.user_id ___ u.user_id);',
+    blanks: 2,
+    options: ['NOT EXISTS', 'EXISTS', '=', 'IS', 'NOT IN', 'IN'],
+    optionExplanations: [
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없으면 TRUE입니다. NULL이 있어도 영향을 받지 않아 안전합니다' },
+      { value: 'EXISTS', explanation: '결과가 있으면 TRUE입니다. 구독 중인 사용자가 조회됩니다' },
+      { value: '=', explanation: 'user_id가 같은지 비교합니다. WHERE 조건에서 상관 서브쿼리의 조인 조건으로 사용됩니다' },
+      { value: 'IS', explanation: 'NULL 여부 확인(IS NULL, IS NOT NULL)에 사용됩니다. 일반 값 비교에는 =를 사용합니다' },
+      { value: 'NOT IN', explanation: '값 목록에 없는 경우를 선택하지만, 서브쿼리에 NULL이 있으면 전체 결과가 비는 위험이 있습니다' },
+      { value: 'IN', explanation: '값 목록에 있는 경우를 선택합니다. 서브쿼리의 조인 조건에는 맞지 않습니다' },
+    ],
+    correctAnswers: ['NOT EXISTS', '='],
+    hints: {
+      directional: ['첫 번째 빈칸: NULL에 안전한 부재 확인 연산자, 두 번째 빈칸: 상관 서브쿼리에서 외부 user_id와 내부 user_id를 연결하는 비교 연산자입니다'],
+      constraint: ['두 번째 빈칸은 s.user_id와 u.user_id가 같은지 비교하는 조건입니다'],
+      misconception: ['NOT IN 서브쿼리에 NULL이 있으면 모든 비교가 UNKNOWN이 되어 아무 행도 반환되지 않습니다. NOT EXISTS는 이 문제가 없습니다'],
+    },
+  } as FillProblem,
+
+  // ssf16 - advanced / 게임 / inline view + 다중 서브쿼리
+  {
+    id: 'ssf16',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '상위 10% 점수 달성 유저와 전체 대비 비율 계산',
+    question: '아래 SQL의 빈칸을 채워 전체 플레이어 중 상위 10% 컷오프 점수(90번째 백분위수 근사)를 초과하는 유저 수와 전체 유저 대비 비율을 조회하세요.',
+    learningPoint: '인라인 뷰와 스칼라 서브쿼리를 중첩하여 분위수 기반 필터링과 비율 계산을 동시에 처리하는 패턴',
+    tags: ['인라인 뷰', '스칼라 서브쿼리', '비율 계산', '고급 서브쿼리'],
+    explanation: '복잡한 통계 쿼리를 서브쿼리 계층으로 분해합니다. 인라인 뷰로 유저별 최고 점수를 집계하고, 스칼라 서브쿼리로 상위 10% 임계값과 전체 유저 수를 구한 뒤, SELECT 절에서 비율을 계산합니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT COUNT(*) AS top_users, ROUND(COUNT(*) * 100.0 / (SELECT ___ FROM users), 2) AS ratio_pct FROM (SELECT user_id, MAX(score) AS best_score FROM scores GROUP BY user_id) AS user_best WHERE best_score > (SELECT ___ (best) FROM (SELECT MAX(score) AS best FROM scores GROUP BY user_id ORDER BY best DESC LIMIT (SELECT ROUND(COUNT(DISTINCT user_id) * 0.1) FROM scores)) AS top10);',
+    blanks: 2,
+    options: ['COUNT(*)', 'MAX(best)', 'SUM(best)', 'AVG(best)', 'MIN(best)', 'COUNT(user_id)'],
+    optionExplanations: [
+      { value: 'COUNT(*)', explanation: 'users 테이블의 전체 행 수(전체 유저 수)를 반환합니다. 비율 계산의 분모로 사용됩니다' },
+      { value: 'MAX(best)', explanation: '상위 10% 유저들 중 가장 높은 점수를 임계값으로 사용합니다. 이보다 높은 유저는 상위 10% 이내입니다' },
+      { value: 'SUM(best)', explanation: '점수들의 합계를 반환합니다. 임계값 비교에는 의미가 없습니다' },
+      { value: 'AVG(best)', explanation: '상위 10% 유저들의 평균 점수를 반환합니다. 임계값이 아닌 평균이 되어 의도와 다릅니다' },
+      { value: 'MIN(best)', explanation: '상위 10% 유저들 중 가장 낮은 점수(10% 컷오프)를 반환합니다. ORDER BY DESC + LIMIT로 가져온 상위 10% 목록의 최솟값이 임계값입니다' },
+      { value: 'COUNT(user_id)', explanation: 'user_id가 NULL이 아닌 행의 수를 반환합니다. 전체 유저 수 계산에 사용할 수 있지만, 이미 첫 번째 빈칸에 해당하는 용도입니다' },
+    ],
+    correctAnswers: ['COUNT(*)', 'MIN(best)'],
+    hints: {
+      directional: ['첫 번째 빈칸: users 테이블의 전체 유저 수(비율 분모), 두 번째 빈칸: ORDER BY DESC + LIMIT으로 뽑은 상위 10% 목록에서 가장 낮은 값이 컷오프 점수입니다'],
+      constraint: ['ORDER BY best DESC + LIMIT으로 가져온 행들은 이미 상위 10% 유저들입니다. 그 목록의 MIN이 입장 기준점(임계값)이 됩니다'],
+      misconception: ['MAX(best)를 쓰면 상위 10% 중 1위 점수가 임계값이 되어, 오직 1위만 선택되는 결과가 나옵니다'],
+    },
+  } as FillProblem,
+
+  // ssf17 - basic / 게임 / NOT IN
+  {
+    id: 'ssf17',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '게임 플레이 기록이 있는 유저만 조회',
+    question: 'scores 테이블에 플레이 기록이 존재하는 유저만 users 테이블에서 조회하려 합니다. 빈칸을 채우세요.',
+    learningPoint: 'IN 서브쿼리로 다른 테이블에 존재하는 행만 필터링할 수 있다',
+    tags: ['IN', '서브쿼리'],
+    explanation: 'IN은 서브쿼리가 반환하는 값 목록에 포함되는 행만 선택합니다. scores에서 플레이 기록이 있는 user_id 목록을 구하고, users 테이블에서 해당 유저만 조회합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT user_id, level FROM users WHERE user_id ___ (SELECT user_id FROM ___);',
+    blanks: 2,
+    options: ['IN', 'NOT IN', 'scores', 'users', 'EXISTS', 'items'],
+    optionExplanations: [
+      { value: 'IN', explanation: '서브쿼리가 반환하는 목록에 포함되는 행만 선택합니다' },
+      { value: 'NOT IN', explanation: '목록에 없는 행을 선택합니다. 기록이 있는 유저를 찾으므로 반대입니다' },
+      { value: 'scores', explanation: '플레이 기록이 저장된 테이블입니다' },
+      { value: 'users', explanation: '외부 쿼리에서 이미 사용 중인 테이블입니다. 서브쿼리에서 다른 테이블을 참조해야 합니다' },
+      { value: 'EXISTS', explanation: 'WHERE user_id EXISTS 형태는 문법적으로 올바르지 않습니다' },
+      { value: 'items', explanation: '아이템 테이블로 플레이 기록과 다릅니다' },
+    ],
+    correctAnswers: ['IN', 'scores'],
+    hints: {
+      directional: ['플레이 기록이 "있는" 유저를 찾는 연산자와, 기록이 저장된 테이블명을 채우세요'],
+      constraint: ['서브쿼리는 외부 쿼리의 user_id와 비교할 값을 반환해야 합니다'],
+      misconception: ['NOT IN은 반대로 기록이 없는 유저를 찾습니다'],
+    },
+  } as FillProblem,
+
+  // ssf18 - basic / 병원 / scalar subquery (WHERE)
+  {
+    id: 'ssf18',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '가장 최근에 예약한 환자 찾기',
+    question: '아래 SQL의 빈칸을 채워 appointments 테이블에서 예약 날짜(appt_date)가 가장 최근인 환자의 patient_id를 조회하세요.',
+    learningPoint: '스칼라 서브쿼리로 MAX 집계 결과와 비교하여 최신 레코드를 찾는 패턴',
+    tags: ['스칼라 서브쿼리', 'MAX', 'WHERE'],
+    explanation: 'MAX(appt_date)는 단일 값을 반환하므로 = 연산자와 함께 스칼라 서브쿼리로 사용할 수 있습니다. 가장 최근 날짜와 동일한 예약을 가진 환자를 찾습니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT patient_id FROM appointments WHERE appt_date = (SELECT ___ (appt_date) FROM appointments);',
+    blanks: 1,
+    options: ['MAX', 'MIN', 'AVG', 'COUNT', 'LAST', 'TOP'],
+    optionExplanations: [
+      { value: 'MAX', explanation: '가장 큰(가장 최근인) appt_date 값 하나를 반환합니다. = 비교에 쓸 수 있는 스칼라 서브쿼리가 됩니다' },
+      { value: 'MIN', explanation: '가장 오래된 날짜를 반환합니다. 가장 처음 예약한 환자가 조회됩니다' },
+      { value: 'AVG', explanation: '날짜의 평균을 반환합니다. 날짜 타입 평균은 DBMS마다 동작이 다르고 의미가 불명확합니다' },
+      { value: 'COUNT', explanation: '행 수를 반환합니다. 날짜 값과 비교하는 것은 의미가 없습니다' },
+      { value: 'LAST', explanation: 'SQL 표준 집계 함수가 아닙니다. 일부 DBMS에서만 지원합니다' },
+      { value: 'TOP', explanation: 'SQL Server의 행 수 제한 키워드입니다. 집계 함수 자리에 올 수 없습니다' },
+    ],
+    correctAnswers: ['MAX'],
+    hints: {
+      directional: ['가장 최근 날짜를 구하려면 날짜 값 중 가장 큰 값을 반환하는 집계 함수를 사용하세요'],
+      constraint: ['스칼라 서브쿼리는 단일 값을 반환해야 = 비교가 가능합니다'],
+      misconception: ['AVG는 날짜 타입에 대해 예측하기 어려운 결과를 줄 수 있습니다. 날짜 최댓값은 MAX가 안전합니다'],
+    },
+  } as FillProblem,
+
+  // ssf19 - basic / 광고 / IN
+  {
+    id: 'ssf19',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '예산이 높은 캠페인의 광고 로그만 보기',
+    question: '아래 SQL의 빈칸을 채워 budget이 1,000,000 이상인 캠페인에서 발생한 ad_logs 기록만 조회하세요.',
+    learningPoint: 'IN 서브쿼리로 조건을 만족하는 FK 값 목록을 구한 뒤 관련 로그를 필터링하는 패턴',
+    tags: ['IN', '서브쿼리', '필터링'],
+    explanation: 'campaigns 테이블에서 조건을 만족하는 ad_id를 먼저 구하고, ad_logs 테이블에서 그 ad_id 목록에 속하는 로그만 IN으로 필터링합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT log_id, ad_id, event_type FROM ad_logs WHERE ad_id ___ (SELECT ad_id FROM campaigns WHERE budget ___ 1000000);',
+    blanks: 2,
+    options: ['IN', 'NOT IN', '>=', '>', '=', 'BETWEEN'],
+    optionExplanations: [
+      { value: 'IN', explanation: '서브쿼리가 반환하는 ad_id 목록에 해당하는 로그를 필터링합니다. 다중 값 비교에 적합합니다' },
+      { value: 'NOT IN', explanation: '목록에 없는 경우를 선택합니다. 예산이 낮은 캠페인의 로그가 조회됩니다' },
+      { value: '>=', explanation: '크거나 같음 비교 연산자입니다. 1,000,000 이상 조건(포함)에 사용합니다' },
+      { value: '>', explanation: '초과 비교 연산자입니다. 1,000,000을 포함하지 않으므로 조건에 정확히 맞지 않습니다' },
+      { value: '=', explanation: '단일 값 비교에 사용합니다. 서브쿼리가 여러 행을 반환하면 오류가 발생합니다' },
+      { value: 'BETWEEN', explanation: '범위 조건입니다. 단방향 이상 조건에는 >= 가 더 간결합니다' },
+    ],
+    correctAnswers: ['IN', '>='],
+    hints: {
+      directional: ['첫 번째 빈칸: 여러 ad_id 목록과 비교하는 연산자, 두 번째 빈칸: 1,000,000 이상 조건에 맞는 비교 연산자입니다'],
+      constraint: ['1,000,000 이상은 1,000,000을 포함하므로 >가 아닌 >=를 사용해야 합니다'],
+      misconception: ['= 연산자는 서브쿼리가 단일 값을 반환해야만 사용 가능합니다'],
+    },
+  } as FillProblem,
+
+  // ssf20 - basic / 이커머스 / NOT IN
+  {
+    id: 'ssf20',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '한 번도 주문되지 않은 상품 찾기',
+    question: '아래 SQL의 빈칸을 채워 orders 테이블에 등장한 적 없는 product_id를 products 테이블에서 조회하세요.',
+    learningPoint: 'NOT IN 서브쿼리로 다른 테이블에 존재하지 않는 레코드를 찾는 패턴',
+    tags: ['NOT IN', '서브쿼리', '미판매 상품'],
+    explanation: 'orders 테이블에서 주문된 product_id 목록을 서브쿼리로 구한 뒤, products 테이블에서 NOT IN으로 해당 목록에 없는 상품을 필터링합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT product_id, product_name FROM products WHERE product_id ___ (SELECT DISTINCT ___ FROM orders);',
+    blanks: 2,
+    options: ['NOT IN', 'IN', 'product_id', 'order_id', 'user_id', '<>'],
+    optionExplanations: [
+      { value: 'NOT IN', explanation: '서브쿼리가 반환하는 product_id 목록에 없는 상품을 선택합니다. 주문되지 않은 상품을 찾는 데 적합합니다' },
+      { value: 'IN', explanation: '목록에 있는 경우를 선택합니다. 최소 한 번 주문된 상품이 조회됩니다' },
+      { value: 'product_id', explanation: '서브쿼리에서 반환할 컬럼입니다. 외부 쿼리의 product_id와 비교할 동일한 컬럼이어야 합니다' },
+      { value: 'order_id', explanation: '주문 ID를 반환합니다. product_id와 비교하면 의미가 없습니다' },
+      { value: 'user_id', explanation: '유저 ID를 반환합니다. product_id와 비교하면 의미가 없습니다' },
+      { value: '<>', explanation: '단일 값 비교 연산자입니다. 서브쿼리가 여러 행을 반환할 때는 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['NOT IN', 'product_id'],
+    hints: {
+      directional: ['첫 번째 빈칸: 주문 목록에 "없는" 상품을 고르는 연산자, 두 번째 빈칸: 외부의 product_id와 비교할 컬럼입니다'],
+      constraint: ['DISTINCT를 사용해 중복 product_id를 제거하면 서브쿼리 성능이 향상됩니다'],
+      misconception: ['<> 연산자는 서브쿼리가 여러 행을 반환할 때 사용할 수 없습니다. NOT IN을 사용하세요'],
+    },
+  } as FillProblem,
+
+  // ssf21 - basic / 구독 / scalar subquery (SELECT)
+  {
+    id: 'ssf21',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '각 구독에 플랜 이름을 함께 출력하기',
+    question: '아래 SQL의 빈칸을 채워 subscriptions 테이블의 각 행에 해당 plan_id의 플랜 이름(plan_name)을 함께 조회하세요.',
+    learningPoint: 'SELECT 절 스칼라 서브쿼리로 관련 테이블의 단일 값을 컬럼처럼 추가하는 패턴',
+    tags: ['스칼라 서브쿼리', 'SELECT 절'],
+    explanation: 'SELECT 절에 서브쿼리를 배치하면 각 행마다 단일 값을 계산해 컬럼처럼 추가할 수 있습니다. 반드시 단일 행·단일 열만 반환해야 합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT sub_id, plan_id, (SELECT ___ FROM plans p WHERE p.plan_id = s.plan_id) AS plan_name FROM subscriptions s;',
+    blanks: 1,
+    options: ['plan_name', 'plan_id', 'price', 'COUNT(*)', '*', 'MAX(price)'],
+    optionExplanations: [
+      { value: 'plan_name', explanation: '플랜 이름 텍스트를 단일 값으로 반환합니다. AS plan_name 별칭과 의미가 일치합니다' },
+      { value: 'plan_id', explanation: '플랜 ID를 반환합니다. 이미 subscriptions에 있는 값이라 중복됩니다' },
+      { value: 'price', explanation: '플랜 가격을 반환합니다. 이름이 아닌 가격이 출력됩니다' },
+      { value: 'COUNT(*)', explanation: '플랜 수를 반환합니다. plan_id 하나에 플랜이 하나면 항상 1이 되어 의미가 없습니다' },
+      { value: '*', explanation: '모든 컬럼을 반환합니다. 스칼라 서브쿼리는 단일 컬럼만 반환해야 하므로 오류가 발생합니다' },
+      { value: 'MAX(price)', explanation: '최고 가격을 반환합니다. 플랜 이름을 가져오는 목적과 다릅니다' },
+    ],
+    correctAnswers: ['plan_name'],
+    hints: {
+      directional: ['AS plan_name 별칭을 보면 어떤 컬럼 값을 가져와야 할지 알 수 있습니다'],
+      constraint: ['스칼라 서브쿼리는 반드시 단일 컬럼만 반환해야 합니다. *를 사용하면 오류가 납니다'],
+      misconception: ['plan_id를 반환하면 이미 있는 값을 중복으로 출력하게 됩니다'],
+    },
+  } as FillProblem,
+
+  // ssf22 - intermediate / 배달 / EXISTS
+  {
+    id: 'ssf22',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '리뷰를 남긴 고객의 주문만 조회',
+    question: '아래 SQL의 빈칸을 채워 reviews 테이블에 리뷰를 작성한 고객(user_id)의 주문 목록만 조회하세요.',
+    learningPoint: 'EXISTS 상관 서브쿼리로 다른 테이블에 관련 데이터가 있는 경우만 선택하는 패턴',
+    tags: ['EXISTS', '상관 서브쿼리'],
+    explanation: 'EXISTS(서브쿼리)는 서브쿼리가 하나 이상의 행을 반환하면 TRUE입니다. 외부 쿼리의 o.user_id를 서브쿼리에서 참조해 리뷰를 작성한 사용자의 주문만 필터링합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT order_id, amount FROM orders o WHERE ___ (SELECT 1 FROM reviews r WHERE r.user_id = ___ );',
+    blanks: 2,
+    options: ['EXISTS', 'NOT EXISTS', 'o.user_id', 'r.user_id', 'IN', 'o.order_id'],
+    optionExplanations: [
+      { value: 'EXISTS', explanation: '리뷰가 존재하면 TRUE를 반환합니다. 리뷰를 남긴 고객의 주문을 찾는 데 적합합니다' },
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없을 때 TRUE입니다. 리뷰를 남기지 않은 고객의 주문이 조회됩니다' },
+      { value: 'o.user_id', explanation: '외부 쿼리(orders)의 user_id를 서브쿼리에서 참조합니다. 이렇게 해야 각 주문 고객마다 리뷰 여부를 확인하는 상관 서브쿼리가 됩니다' },
+      { value: 'r.user_id', explanation: '서브쿼리 내부 컬럼끼리 비교하게 됩니다. 외부 쿼리와 연결이 없어져 상관 서브쿼리가 되지 않습니다' },
+      { value: 'IN', explanation: '값 목록 비교에 사용합니다. WHERE EXISTS 자리에 IN을 쓰면 문법 오류가 발생합니다' },
+      { value: 'o.order_id', explanation: '주문 ID와 user_id를 비교하면 의미가 없습니다' },
+    ],
+    correctAnswers: ['EXISTS', 'o.user_id'],
+    hints: {
+      directional: ['첫 번째 빈칸: 리뷰가 "존재하는" 경우를 확인하는 연산자, 두 번째 빈칸: 외부 쿼리의 고객 ID로 상관 서브쿼리를 만듭니다'],
+      constraint: ['r은 reviews 별칭, o는 orders 별칭입니다. 외부 쿼리와 연결하려면 o.user_id를 참조해야 합니다'],
+      misconception: ['r.user_id = r.user_id는 항상 TRUE가 되어 모든 주문이 반환됩니다'],
+    },
+  } as FillProblem,
+
+  // ssf23 - intermediate / 게임 / ANY/ALL
+  {
+    id: 'ssf23',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '어떤 VIP 유저보다도 점수가 높은 유저 찾기',
+    question: "아래 SQL의 빈칸을 채워 vip_users 테이블에 있는 모든 VIP 유저의 최고 점수보다 높은 점수를 가진 일반 유저를 조회하세요.",
+    learningPoint: 'ALL 연산자로 서브쿼리의 모든 값보다 큰 경우를 필터링하는 패턴',
+    tags: ['ALL', '서브쿼리', '비교 연산'],
+    explanation: "> ALL(서브쿼리)은 서브쿼리가 반환하는 모든 값보다 큰 경우에만 TRUE입니다. 이는 > MAX(서브쿼리)와 동일한 결과를 냅니다. ANY는 하나 이상 만족하면 TRUE입니다.",
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT user_id, score FROM scores WHERE score > ___ (SELECT best_score FROM vip_users) AND user_id ___ (SELECT user_id FROM vip_users);',
+    blanks: 2,
+    options: ['ALL', 'ANY', 'NOT IN', 'IN', 'MAX', 'MIN'],
+    optionExplanations: [
+      { value: 'ALL', explanation: 'VIP 유저 전체의 best_score보다 높아야 TRUE입니다. 가장 높은 VIP 점수보다 높은 유저를 선택합니다' },
+      { value: 'ANY', explanation: 'VIP 유저 중 하나라도 만족하면 TRUE입니다. 최솟값보다만 높으면 선택되어 너무 많은 유저가 조회됩니다' },
+      { value: 'NOT IN', explanation: 'VIP가 아닌 유저를 골라낼 때 사용합니다. 두 번째 빈칸에서 일반 유저 조건으로 사용됩니다' },
+      { value: 'IN', explanation: '목록에 있는 경우를 선택합니다. 두 번째 빈칸에 쓰면 VIP 유저도 포함됩니다' },
+      { value: 'MAX', explanation: 'MAX는 집계 함수로 서브쿼리 앞에 바로 올 수 없습니다. 비교 연산자 뒤에 (SELECT MAX(...)) 형태로 써야 합니다' },
+      { value: 'MIN', explanation: 'MIN은 집계 함수로 서브쿼리 앞에 바로 올 수 없습니다' },
+    ],
+    correctAnswers: ['ALL', 'NOT IN'],
+    hints: {
+      directional: ['첫 번째 빈칸: 서브쿼리의 "모든" 값보다 크다는 조건, 두 번째 빈칸: VIP 목록에 "없는" 일반 유저 조건입니다'],
+      constraint: ['> ALL은 서브쿼리 최댓값보다 크다는 의미와 동일합니다'],
+      misconception: ['> ANY는 최솟값보다 크면 만족하므로, 조건이 > ALL보다 훨씬 느슨합니다'],
+    },
+  } as FillProblem,
+
+  // ssf24 - intermediate / 병원 / inline view (FROM)
+  {
+    id: 'ssf24',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '진료과별 예약 건수 상위 2개만 보기',
+    question: '아래 SQL의 빈칸을 채워 인라인 뷰로 진료과(dept)별 예약 건수를 집계한 뒤 건수가 많은 순으로 정렬하세요.',
+    learningPoint: '인라인 뷰 내에서 집계 후 외부 쿼리에서 정렬하는 패턴',
+    tags: ['인라인 뷰', 'FROM 절', '집계', '정렬'],
+    explanation: 'FROM 절의 서브쿼리(인라인 뷰)에서 dept별 예약 건수를 집계하고, 외부 쿼리에서 appt_count를 기준으로 내림차순 정렬합니다. 인라인 뷰에는 반드시 별칭을 붙여야 합니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT dept, appt_count FROM (SELECT dept, COUNT(*) AS appt_count FROM appointments ___ dept) AS dept_summary ___ appt_count DESC LIMIT 2;',
+    blanks: 2,
+    options: ['GROUP BY', 'ORDER BY', 'WHERE', 'HAVING', 'PARTITION BY', 'DISTINCT'],
+    optionExplanations: [
+      { value: 'GROUP BY', explanation: 'dept 별로 행을 묶어 COUNT(*)가 각 진료과의 예약 수를 반환하게 합니다. 인라인 뷰 내 집계에 필수입니다' },
+      { value: 'ORDER BY', explanation: '외부 쿼리에서 appt_count를 내림차순 정렬합니다. 건수가 많은 순으로 출력하는 데 사용합니다' },
+      { value: 'WHERE', explanation: '행 필터링 키워드입니다. 컬럼명 앞에 WHERE를 쓰면 문법 오류가 발생합니다' },
+      { value: 'HAVING', explanation: '그룹 필터링에 사용합니다. GROUP BY 없이 단독 사용은 오류가 됩니다' },
+      { value: 'PARTITION BY', explanation: '윈도우 함수에서 파티션 지정에 사용합니다. 일반 GROUP BY 쿼리에서는 사용할 수 없습니다' },
+      { value: 'DISTINCT', explanation: '중복 제거 키워드입니다. 집계를 위해서는 GROUP BY가 필요합니다' },
+    ],
+    correctAnswers: ['GROUP BY', 'ORDER BY'],
+    hints: {
+      directional: ['첫 번째 빈칸: dept별 COUNT를 구하려면 그룹을 만들어야 합니다. 두 번째 빈칸: 외부 쿼리에서 건수 기준 내림차순 정렬입니다'],
+      constraint: ['인라인 뷰 안에서 GROUP BY로 집계하고, 외부 쿼리에서 ORDER BY로 정렬합니다'],
+      misconception: ['HAVING은 GROUP BY 뒤에만 올 수 있고, 여기서는 정렬이 필요하므로 ORDER BY가 맞습니다'],
+    },
+  } as FillProblem,
+
+  // ssf25 - intermediate / 광고 / NOT EXISTS
+  {
+    id: 'ssf25',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '로그가 전혀 없는 캠페인 찾기',
+    question: '아래 SQL의 빈칸을 채워 ad_logs 테이블에 단 한 건의 로그도 없는 캠페인(campaigns)을 조회하세요.',
+    learningPoint: 'NOT EXISTS 상관 서브쿼리로 관련 데이터가 전혀 없는 부모 레코드를 찾는 패턴',
+    tags: ['NOT EXISTS', '상관 서브쿼리', '부재 조건'],
+    explanation: 'NOT EXISTS는 서브쿼리가 아무 행도 반환하지 않을 때 TRUE가 됩니다. 로그가 없는 캠페인처럼 "관련 데이터가 없는 경우"를 조회할 때 NOT EXISTS가 NOT IN보다 NULL 안전하고 명확합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT ad_id, campaign_name FROM campaigns c WHERE ___ (SELECT 1 FROM ad_logs l WHERE l.ad_id = c.___);',
+    blanks: 2,
+    options: ['NOT EXISTS', 'EXISTS', 'ad_id', 'campaign_name', 'NOT IN', 'budget'],
+    optionExplanations: [
+      { value: 'NOT EXISTS', explanation: '서브쿼리 결과가 없을 때 TRUE입니다. 로그가 없는 캠페인을 찾는 데 적합합니다' },
+      { value: 'EXISTS', explanation: '결과가 있으면 TRUE입니다. 로그가 있는 캠페인이 조회됩니다' },
+      { value: 'ad_id', explanation: '서브쿼리에서 외부 쿼리의 ad_id를 참조해 상관 서브쿼리를 완성합니다. 각 캠페인의 ad_id로 로그를 필터링합니다' },
+      { value: 'campaign_name', explanation: '캠페인 이름과 ad_logs의 ad_id를 비교하면 의미 없는 비교가 됩니다' },
+      { value: 'NOT IN', explanation: '값 목록 제외에 사용합니다. 이 구조에서는 NOT EXISTS가 더 명확하고 안전합니다' },
+      { value: 'budget', explanation: '예산 컬럼과 ad_id를 비교하면 의미가 없습니다' },
+    ],
+    correctAnswers: ['NOT EXISTS', 'ad_id'],
+    hints: {
+      directional: ['첫 번째 빈칸: 로그가 "없는" 경우 TRUE인 연산자, 두 번째 빈칸: 로그와 캠페인을 연결하는 공통 컬럼입니다'],
+      constraint: ['c는 campaigns 별칭입니다. 서브쿼리에서 c.ad_id를 참조해야 올바른 상관 서브쿼리가 됩니다'],
+      misconception: ['NOT IN은 서브쿼리 결과에 NULL이 있으면 모든 행이 제외됩니다. NOT EXISTS가 더 안전합니다'],
+    },
+  } as FillProblem,
+
+  // ssf26 - intermediate / 이커머스 / scalar subquery (WHERE) + 비교
+  {
+    id: 'ssf26',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '평균 주문 금액 미만 주문만 조회',
+    question: '아래 SQL의 빈칸을 채워 orders 테이블에서 전체 평균 주문 금액보다 낮은 주문의 order_id와 amount를 조회하세요.',
+    learningPoint: '스칼라 서브쿼리로 집계 결과를 구해 WHERE 절에서 비교 연산에 활용하는 패턴',
+    tags: ['스칼라 서브쿼리', 'WHERE', 'AVG', '비교 연산'],
+    explanation: 'AVG(amount)는 단일 값을 반환하므로 스칼라 서브쿼리로 사용할 수 있습니다. < 연산자로 평균 미만인 주문만 필터링합니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT order_id, amount FROM orders WHERE amount ___ (SELECT ___ (amount) FROM orders);',
+    blanks: 2,
+    options: ['<', '>', 'AVG', 'MIN', '<=', 'SUM'],
+    optionExplanations: [
+      { value: '<', explanation: '평균보다 작은 amount를 가진 행을 선택합니다. 평균 미만 조건에 정확합니다' },
+      { value: '>', explanation: '평균보다 큰 행을 선택합니다. 평균 초과 주문이 조회됩니다' },
+      { value: 'AVG', explanation: '전체 amount의 평균 값 하나를 반환합니다. 스칼라 서브쿼리로 사용 가능합니다' },
+      { value: 'MIN', explanation: '최솟값을 반환합니다. 평균이 아닌 최소 금액과 비교하는 결과가 됩니다' },
+      { value: '<=', explanation: '평균 이하를 선택합니다. 정확히 평균과 같은 주문도 포함됩니다. 문제 조건은 "미만"이므로 < 가 더 정확합니다' },
+      { value: 'SUM', explanation: '전체 합계를 반환합니다. 개별 amount와 전체 합계를 비교하는 것은 의미가 없습니다' },
+    ],
+    correctAnswers: ['<', 'AVG'],
+    hints: {
+      directional: ['첫 번째 빈칸: 평균보다 "낮은" 비교 연산자, 두 번째 빈칸: 단일 평균 값을 반환하는 집계 함수입니다'],
+      constraint: ['스칼라 서브쿼리는 단일 값을 반환해야 합니다. AVG는 집계 함수로 단일 값을 반환합니다'],
+      misconception: ['<= 는 평균과 동일한 금액도 포함합니다. "미만"이면 < 를 사용해야 합니다'],
+    },
+  } as FillProblem,
+
+  // ssf27 - advanced / 구독 / inline view + NOT EXISTS
+  {
+    id: 'ssf27',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '한 번도 업그레이드하지 않은 플랜의 구독자 수 집계',
+    question: '아래 SQL의 빈칸을 채워 plan_upgrades 테이블에 업그레이드 이력이 없는 구독자들의 plan_id별 인원수를 조회하세요.',
+    learningPoint: 'NOT EXISTS 상관 서브쿼리와 인라인 뷰를 결합하여 부재 조건을 기반으로 집계하는 패턴',
+    tags: ['NOT EXISTS', '인라인 뷰', '상관 서브쿼리', '집계'],
+    explanation: '먼저 NOT EXISTS로 업그레이드 이력이 없는 구독자를 필터링한 결과를 인라인 뷰로 만들고, 외부 쿼리에서 plan_id별로 집계합니다. 복잡한 조건을 단계적으로 처리하는 패턴입니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT plan_id, COUNT(*) AS no_upgrade_count FROM (SELECT s.sub_id, s.plan_id FROM subscriptions s WHERE ___ (SELECT 1 FROM plan_upgrades u WHERE u.sub_id = s.sub_id)) AS never_upgraded ___ plan_id;',
+    blanks: 2,
+    options: ['NOT EXISTS', 'EXISTS', 'GROUP BY', 'ORDER BY', 'NOT IN', 'HAVING'],
+    optionExplanations: [
+      { value: 'NOT EXISTS', explanation: '업그레이드 이력이 없을 때 TRUE입니다. 인라인 뷰 내에서 업그레이드하지 않은 구독자를 필터링합니다' },
+      { value: 'EXISTS', explanation: '이력이 있으면 TRUE입니다. 업그레이드한 구독자가 선택됩니다' },
+      { value: 'GROUP BY', explanation: 'plan_id별로 행을 묶어 COUNT(*)가 각 플랜의 미업그레이드 구독자 수를 반환합니다' },
+      { value: 'ORDER BY', explanation: '정렬 키워드입니다. 집계를 위해서는 GROUP BY가 필요합니다' },
+      { value: 'NOT IN', explanation: '값 목록 제외에 사용합니다. NOT EXISTS가 NULL 안전하고 이 구조에 더 적합합니다' },
+      { value: 'HAVING', explanation: '그룹 필터링에 사용합니다. 여기서는 그룹을 만드는 GROUP BY가 필요합니다' },
+    ],
+    correctAnswers: ['NOT EXISTS', 'GROUP BY'],
+    hints: {
+      directional: ['첫 번째 빈칸: 업그레이드 이력이 "없는" 경우, 두 번째 빈칸: plan_id별 COUNT를 구하는 그룹 절입니다'],
+      constraint: ['인라인 뷰 내부에서 NOT EXISTS로 필터링하고, 외부에서 GROUP BY로 집계합니다'],
+      misconception: ['HAVING은 GROUP BY 뒤에 위치해야 하며, 단독으로 집계를 만들 수 없습니다'],
+    },
+  } as FillProblem,
+
+  // ssf28 - advanced / 게임 / ANY + 비교
+  {
+    id: 'ssf28',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '어떤 레벨 50 유저보다 높은 점수를 가진 레벨 30 이하 유저 탐색',
+    question: '아래 SQL의 빈칸을 채워 레벨(level)이 30 이하인 유저 중 레벨 50인 유저의 점수 중 하나라도 초과하는 점수를 가진 유저를 조회하세요.',
+    learningPoint: 'ANY 연산자로 서브쿼리의 값 중 하나라도 만족하는 경우를 필터링하는 패턴',
+    tags: ['ANY', '서브쿼리', '비교 연산'],
+    explanation: '> ANY(서브쿼리)는 서브쿼리가 반환하는 값 중 하나라도 만족하면 TRUE입니다. 이는 > MIN(서브쿼리)와 동일합니다. 반면 > ALL은 모든 값보다 커야 합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT user_id, level, score FROM users WHERE level ___ 30 AND score > ___ (SELECT score FROM users WHERE level = 50);',
+    blanks: 2,
+    options: ['<=', '<', 'ANY', 'ALL', '>=', 'IN'],
+    optionExplanations: [
+      { value: '<=', explanation: '레벨이 30 이하(30 포함)인 조건입니다. level <= 30이 올바른 조건입니다' },
+      { value: '<', explanation: '레벨이 30 미만(30 미포함)입니다. "이하"이므로 <= 가 더 정확합니다' },
+      { value: 'ANY', explanation: '레벨 50 유저 점수 중 하나라도 초과하면 TRUE입니다. 최솟값보다 높은 유저가 선택됩니다' },
+      { value: 'ALL', explanation: '레벨 50 유저 모두의 점수보다 높아야 TRUE입니다. 조건이 더 엄격해집니다' },
+      { value: '>=', explanation: '이상 비교 연산자입니다. "이하" 조건에는 <= 가 맞습니다' },
+      { value: 'IN', explanation: '값 목록에 있는지 확인합니다. score > IN 형태는 문법 오류입니다' },
+    ],
+    correctAnswers: ['<=', 'ANY'],
+    hints: {
+      directional: ['첫 번째 빈칸: 레벨 30 "이하" 조건, 두 번째 빈칸: 레벨 50 유저 점수 중 "하나라도" 초과하는 조건입니다'],
+      constraint: ['"이하"는 30을 포함하므로 <=, "하나라도"는 ANY를 사용합니다'],
+      misconception: ['> ALL은 레벨 50 유저 모두보다 높아야 하므로 훨씬 까다로운 조건입니다. > ANY가 더 느슨한 조건입니다'],
+    },
+  } as FillProblem,
+
+  // ssf29 - advanced / 배달 / 인라인 뷰 + 스칼라 서브쿼리
+  {
+    id: 'ssf29',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '재주문율이 전체 평균 이상인 음식점만 추출',
+    question: '아래 SQL의 빈칸을 채워 음식점별 재주문율(재주문 고객 수 / 전체 주문 고객 수)이 전체 음식점 평균 재주문율 이상인 음식점을 조회하세요.',
+    learningPoint: '인라인 뷰로 집계한 비율 지표와 스칼라 서브쿼리로 구한 전체 평균을 비교하는 패턴',
+    tags: ['인라인 뷰', '스칼라 서브쿼리', '비율 계산', '고급 서브쿼리'],
+    explanation: '인라인 뷰로 음식점별 재주문율을 먼저 계산하고, WHERE 절의 스칼라 서브쿼리로 전체 음식점 평균 재주문율을 구해 비교합니다. 복잡한 비율 기반 필터링에 적합한 패턴입니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    sqlTemplate: 'SELECT restaurant_id, reorder_rate FROM (SELECT restaurant_id, COUNT(DISTINCT CASE WHEN order_count > 1 THEN user_id END) * 1.0 / COUNT(DISTINCT user_id) AS reorder_rate FROM orders ___ restaurant_id) AS r_stats WHERE reorder_rate ___ (SELECT AVG(reorder_rate) FROM (SELECT restaurant_id, COUNT(DISTINCT CASE WHEN order_count > 1 THEN user_id END) * 1.0 / COUNT(DISTINCT user_id) AS reorder_rate FROM orders GROUP BY restaurant_id) AS avg_stats);',
+    blanks: 2,
+    options: ['GROUP BY', 'ORDER BY', '>=', '>', 'WHERE', 'HAVING'],
+    optionExplanations: [
+      { value: 'GROUP BY', explanation: 'restaurant_id별로 행을 묶어 COUNT 집계가 각 음식점 단위로 계산되도록 합니다. 인라인 뷰 내 집계에 필수입니다' },
+      { value: 'ORDER BY', explanation: '정렬 키워드입니다. 집계를 위해서는 GROUP BY가 필요합니다' },
+      { value: '>=', explanation: '전체 평균 이상(평균 포함)인 음식점을 선택합니다. "이상" 조건에 정확합니다' },
+      { value: '>', explanation: '전체 평균 초과(평균 미포함)인 음식점을 선택합니다. "이상"이 아닌 "초과"가 됩니다' },
+      { value: 'WHERE', explanation: '행 필터링 키워드입니다. restaurant_id 컬럼 앞에 WHERE를 쓰면 문법 오류가 발생합니다' },
+      { value: 'HAVING', explanation: '그룹 필터링 키워드입니다. GROUP BY 없이는 사용할 수 없습니다' },
+    ],
+    correctAnswers: ['GROUP BY', '>='],
+    hints: {
+      directional: ['첫 번째 빈칸: 음식점별 집계를 위한 그룹 절, 두 번째 빈칸: 평균 "이상" 비교 연산자입니다'],
+      constraint: ['인라인 뷰 안에서 GROUP BY로 집계하고, 외부 WHERE에서 AVG 스칼라 서브쿼리와 비교합니다'],
+      misconception: ['> 는 평균과 정확히 같은 값을 제외합니다. "이상"이면 >= 를 사용해야 합니다'],
+    },
+  } as FillProblem,
+
+  // ssf30 - advanced / 광고 / 스칼라 서브쿼리 + NOT EXISTS + 복합 조건
+  {
+    id: 'ssf30',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '최고 예산 캠페인 대비 50% 미만이면서 전환 이벤트가 없는 캠페인',
+    question: '아래 SQL의 빈칸을 채워 최고 예산의 50% 미만인 예산을 가지면서 전환(conversion) 이벤트 로그가 단 한 건도 없는 캠페인을 조회하세요.',
+    learningPoint: '스칼라 서브쿼리와 NOT EXISTS를 AND로 결합하여 복수의 독립 조건을 동시에 적용하는 패턴',
+    tags: ['스칼라 서브쿼리', 'NOT EXISTS', '상관 서브쿼리', '복합 조건'],
+    explanation: '두 가지 독립 조건을 AND로 결합합니다. 첫 번째는 스칼라 서브쿼리로 최고 예산의 50%와 비교하고, 두 번째는 NOT EXISTS 상관 서브쿼리로 전환 로그가 없음을 확인합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT ad_id, budget FROM campaigns c WHERE budget < (SELECT ___ (budget) FROM campaigns) * 0.5 AND ___ (SELECT 1 FROM ad_logs l WHERE l.ad_id = c.ad_id AND l.event_type = 'conversion');",
+    blanks: 2,
+    options: ['MAX', 'AVG', 'NOT EXISTS', 'EXISTS', 'MIN', 'NOT IN'],
+    optionExplanations: [
+      { value: 'MAX', explanation: '최고 예산 단일 값을 반환합니다. * 0.5로 50% 기준값을 만들어 budget과 비교합니다' },
+      { value: 'AVG', explanation: '평균 예산을 반환합니다. 최고 예산 기준이 아닌 평균 예산의 50%와 비교하게 됩니다' },
+      { value: 'NOT EXISTS', explanation: '전환 로그가 없을 때 TRUE입니다. 전환 이벤트가 없는 캠페인을 찾는 데 정확합니다' },
+      { value: 'EXISTS', explanation: '전환 로그가 있으면 TRUE입니다. 전환 이벤트가 있는 캠페인이 조회됩니다' },
+      { value: 'MIN', explanation: '최저 예산을 반환합니다. 최고 예산 기준이 아닌 최저 예산의 50%와 비교하게 됩니다' },
+      { value: 'NOT IN', explanation: '값 목록 제외에 사용합니다. 이 구조에서는 NOT EXISTS가 더 명확하고 NULL 안전합니다' },
+    ],
+    correctAnswers: ['MAX', 'NOT EXISTS'],
+    hints: {
+      directional: ['첫 번째 빈칸: 최고 예산을 반환하는 집계 함수, 두 번째 빈칸: 전환 로그가 "없는" 경우를 확인하는 연산자입니다'],
+      constraint: ['(SELECT MAX(budget) FROM campaigns) * 0.5가 기준값이 됩니다. budget이 이 값보다 낮은 캠페인을 찾습니다'],
+      misconception: ['AVG * 0.5는 평균의 절반이 기준이 됩니다. 최고 예산의 절반 기준에는 MAX를 사용해야 합니다'],
+    },
+  } as FillProblem,
+
   {
     id: 'sso01',
     category: 'sql-subquery',
@@ -74,6 +1002,523 @@ export const SQL_SUBQUERY_PROBLEMS = [
     hints: {
       directional: ['상관 서브쿼리가 외부 쿼리의 값을 참조한다는 점에 주목하세요'],
       misconception: ['일반 서브쿼리는 한 번만 실행되지만, 상관 서브쿼리는 외부 행마다 반복됩니다'],
+    },
+  } as OxProblem,
+
+  // ssp01 - basic / 이커머스 / FILTER (correlated subquery)
+  {
+    id: 'ssp01',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'plan',
+    availableModes: ['write', 'fill'] as const,
+    title: '상관 서브쿼리의 실행 계획 읽기 (FILTER)',
+    question: '아래 실행 계획은 이커머스 DB에서 상관 서브쿼리를 포함한 SQL을 실행했을 때의 결과입니다. 어떤 Operation이 상관 서브쿼리의 반복 실행을 나타내는지 고르세요.',
+    learningPoint: 'FILTER 오퍼레이션은 상관 서브쿼리를 외부 쿼리 각 행마다 반복 실행할 때 실행 계획에 나타난다',
+    tags: ['실행 계획', 'FILTER', '상관 서브쿼리'],
+    explanation: 'FILTER 오퍼레이션은 WHERE 절의 상관 서브쿼리를 처리할 때 나타납니다. 외부 쿼리(CUSTOMERS)에서 각 행을 읽을 때마다 Id=3의 ORDERS 스캔을 반복 실행하여 조건을 평가합니다.',
+    relatedConceptTags: ['select'],
+    planText: `---------------------------------------------------
+| Id | Operation           | Name      | Rows |
+---------------------------------------------------
+|  0 | SELECT STATEMENT    |           |   10 |
+|  1 |  FILTER             |           |      |
+|  2 |   TABLE ACCESS FULL | CUSTOMERS |  200 |
+|  3 |   TABLE ACCESS FULL | ORDERS    | 1000 |
+---------------------------------------------------
+Predicate Information:
+  1 - filter(EXISTS (SELECT 1 FROM ORDERS O
+              WHERE O.CUSTOMER_ID = C.CUSTOMER_ID
+                AND O.AMOUNT > 50000))`,
+    choices: [
+      'SELECT STATEMENT',
+      'FILTER',
+      'TABLE ACCESS FULL (CUSTOMERS)',
+      'TABLE ACCESS FULL (ORDERS)',
+    ],
+    choiceExplanations: [
+      { value: 'SELECT STATEMENT', explanation: '쿼리 전체의 루트 오퍼레이션입니다. 상관 서브쿼리 반복 실행과는 직접 관계가 없습니다.' },
+      { value: 'FILTER', explanation: '상관 서브쿼리(EXISTS 등)를 각 외부 행마다 반복 평가하는 오퍼레이션입니다. Predicate Information에서 상관 조건을 확인할 수 있습니다.' },
+      { value: 'TABLE ACCESS FULL (CUSTOMERS)', explanation: '외부 쿼리의 전체 테이블 스캔입니다. 상관 서브쿼리가 아닌 메인 쿼리의 데이터 접근입니다.' },
+      { value: 'TABLE ACCESS FULL (ORDERS)', explanation: 'FILTER 안에서 반복 호출되는 내부 테이블 스캔이지만, 반복 실행 자체를 나타내는 오퍼레이션은 FILTER입니다.' },
+    ],
+    correctAnswer: 'FILTER',
+    hints: {
+      directional: ['Predicate Information을 보면 EXISTS 절이 어떤 Id에 연결되어 있는지 확인하세요.'],
+      constraint: ['상관 서브쿼리는 외부 쿼리의 각 행(CUSTOMERS)마다 내부 쿼리(ORDERS)를 다시 실행합니다.'],
+      misconception: ['TABLE ACCESS FULL은 데이터를 읽는 방식이며, 반복 실행 제어는 FILTER가 담당합니다.'],
+    },
+  } as PlanProblem,
+
+  // ssp02 - basic / 구독 / HASH JOIN SEMI (IN 서브쿼리)
+  {
+    id: 'ssp02',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'plan',
+    availableModes: ['write', 'fill'] as const,
+    title: 'IN 서브쿼리 최적화 실행 계획 (HASH JOIN SEMI)',
+    question: '아래 실행 계획은 구독 서비스 DB에서 IN 서브쿼리를 포함한 SQL을 실행한 결과입니다. 옵티마이저가 IN 서브쿼리를 어떤 방식으로 최적화했는지 나타내는 오퍼레이션을 고르세요.',
+    learningPoint: '옵티마이저는 IN 서브쿼리를 FILTER 대신 HASH JOIN SEMI로 변환하여 한 번의 해시 조인으로 효율적으로 처리할 수 있다',
+    tags: ['실행 계획', 'HASH JOIN SEMI', 'IN 서브쿼리'],
+    explanation: 'HASH JOIN SEMI는 IN 서브쿼리를 세미 조인으로 변환하여 처리하는 오퍼레이션입니다. 서브쿼리 결과를 해시 테이블로 만든 뒤 외부 쿼리와 한 번만 조인하므로, 행마다 반복 실행하는 FILTER보다 대용량에서 훨씬 빠릅니다.',
+    relatedConceptTags: ['select'],
+    planText: `------------------------------------------------------
+| Id | Operation             | Name       | Rows |
+------------------------------------------------------
+|  0 | SELECT STATEMENT      |            |   50 |
+|  1 |  HASH JOIN SEMI       |            |   50 |
+|  2 |   TABLE ACCESS FULL   | USERS      |  500 |
+|  3 |   TABLE ACCESS FULL   | SUBSCRIPTIONS | 300 |
+------------------------------------------------------
+Predicate Information:
+  1 - access(U.USER_ID = S.USER_ID)`,
+    choices: [
+      'SELECT STATEMENT',
+      'HASH JOIN SEMI',
+      'TABLE ACCESS FULL (USERS)',
+      'TABLE ACCESS FULL (SUBSCRIPTIONS)',
+    ],
+    choiceExplanations: [
+      { value: 'SELECT STATEMENT', explanation: '쿼리 전체의 루트 노드입니다. IN 서브쿼리 최적화와는 관계가 없습니다.' },
+      { value: 'HASH JOIN SEMI', explanation: 'IN 서브쿼리를 세미 조인으로 변환한 오퍼레이션입니다. SUBSCRIPTIONS를 해시 테이블로 빌드한 뒤 USERS와 한 번 조인하므로 FILTER 반복 실행보다 효율적입니다.' },
+      { value: 'TABLE ACCESS FULL (USERS)', explanation: '외부 쿼리의 전체 테이블 스캔으로, 조인의 프로브(probe) 입력입니다. IN 최적화 자체를 나타내지는 않습니다.' },
+      { value: 'TABLE ACCESS FULL (SUBSCRIPTIONS)', explanation: '서브쿼리 대상 테이블의 전체 스캔으로, 해시 테이블 빌드에 사용됩니다. 오퍼레이션 자체가 아닌 데이터 접근 방식입니다.' },
+    ],
+    correctAnswer: 'HASH JOIN SEMI',
+    hints: {
+      directional: ['SEMI가 붙은 오퍼레이션은 한쪽 테이블에서 매칭되는 첫 번째 행만 찾으면 즉시 TRUE를 반환하는 세미 조인 방식입니다.'],
+      constraint: ['IN 서브쿼리를 FILTER로 처리하면 외부 행마다 내부 스캔을 반복합니다. 옵티마이저는 이를 HASH JOIN SEMI로 변환하여 단일 조인으로 처리합니다.'],
+      misconception: ['TABLE ACCESS FULL은 데이터 접근 방법이고, IN 서브쿼리의 최적화 전략은 JOIN 계열 오퍼레이션으로 표현됩니다.'],
+    },
+  } as PlanProblem,
+
+  // ssp03 - intermediate / 게임 / NESTED LOOPS SEMI (EXISTS)
+  {
+    id: 'ssp03',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'plan',
+    availableModes: ['write', 'fill'] as const,
+    title: 'EXISTS 서브쿼리 실행 계획 (NESTED LOOPS SEMI)',
+    question: '아래 실행 계획은 게임 서비스 DB에서 EXISTS 서브쿼리를 포함한 SQL의 실행 결과입니다. 어떤 Id의 오퍼레이션이 EXISTS 세미 조인을 처리하고 있으며, 이 방식의 특징으로 올바른 것을 고르세요.',
+    learningPoint: 'NESTED LOOPS SEMI는 EXISTS 서브쿼리를 처리할 때 사용되며, 내부 테이블에서 매칭 행을 하나 찾으면 즉시 다음 외부 행으로 넘어간다',
+    tags: ['실행 계획', 'NESTED LOOPS SEMI', 'EXISTS'],
+    explanation: 'NESTED LOOPS SEMI(Id=1)는 PLAYERS(Id=2)의 각 행에 대해 MATCH_LOGS(Id=3)에서 조건을 만족하는 첫 번째 행을 발견하는 순간 TRUE를 반환하고 다음 외부 행으로 넘어갑니다. 이는 PLAYERS가 소규모이고 MATCH_LOGS에 적절한 인덱스가 있을 때 효율적입니다.',
+    relatedConceptTags: ['select'],
+    planText: `------------------------------------------------------------
+| Id | Operation                    | Name       | Rows |
+------------------------------------------------------------
+|  0 | SELECT STATEMENT             |            |   30 |
+|  1 |  NESTED LOOPS SEMI           |            |   30 |
+|  2 |   TABLE ACCESS FULL          | PLAYERS    |  300 |
+|  3 |   INDEX RANGE SCAN           | IDX_ML_UID |    5 |
+------------------------------------------------------------
+Predicate Information:
+  1 - access(P.PLAYER_ID = ML.PLAYER_ID)
+  3 - access(ML.PLAYER_ID = P.PLAYER_ID)
+      filter(ML.PLAYED_AT >= SYSDATE - 7)`,
+    choices: [
+      'NESTED LOOPS SEMI는 매칭 행을 모두 찾은 뒤 중복을 제거한다',
+      'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다',
+      'NESTED LOOPS SEMI는 두 테이블을 해시로 변환하여 한 번에 조인한다',
+      'NESTED LOOPS SEMI는 외부 쿼리의 각 행을 내부 서브쿼리 없이 단독으로 처리한다',
+    ],
+    choiceExplanations: [
+      { value: 'NESTED LOOPS SEMI는 매칭 행을 모두 찾은 뒤 중복을 제거한다', explanation: '틀렸습니다. 모든 매칭 행을 찾는 것은 일반 NESTED LOOPS JOIN입니다. SEMI는 첫 번째 매칭 행 발견 즉시 중단합니다.' },
+      { value: 'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다', explanation: '정확합니다. SEMI 조인은 존재 여부만 확인하므로 첫 번째 매칭 행을 찾는 순간 내부 스캔을 중단하고 다음 외부 행으로 진행합니다.' },
+      { value: 'NESTED LOOPS SEMI는 두 테이블을 해시로 변환하여 한 번에 조인한다', explanation: '틀렸습니다. 해시 방식은 HASH JOIN SEMI입니다. NESTED LOOPS는 중첩 반복 방식으로 동작합니다.' },
+      { value: 'NESTED LOOPS SEMI는 외부 쿼리의 각 행을 내부 서브쿼리 없이 단독으로 처리한다', explanation: '틀렸습니다. NESTED LOOPS SEMI도 외부 행마다 내부 인덱스/테이블 접근이 발생합니다.' },
+    ],
+    correctAnswer: 'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다',
+    hints: {
+      directional: ['SEMI 조인은 "존재 여부"만 확인합니다. 매칭 행을 전부 찾을 필요가 없습니다.'],
+      constraint: ['Predicate Information의 filter 조건은 인덱스 스캔(Id=3) 이후 추가로 적용됩니다.'],
+      misconception: ['NESTED LOOPS와 HASH JOIN은 서로 다른 조인 방식입니다. LOOPS는 중첩 반복, HASH는 해시 테이블 빌드 후 프로브 방식입니다.'],
+    },
+  } as PlanProblem,
+
+  // ssp04 - intermediate / 배달 / NESTED LOOPS ANTI (NOT EXISTS)
+  {
+    id: 'ssp04',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'plan',
+    availableModes: ['write', 'fill'] as const,
+    title: 'NOT EXISTS 실행 계획 (NESTED LOOPS ANTI)',
+    question: '아래 실행 계획은 배달 서비스 DB에서 NOT EXISTS 서브쿼리를 실행한 결과입니다. NESTED LOOPS ANTI의 동작 방식으로 올바른 것을 고르세요.',
+    learningPoint: 'NESTED LOOPS ANTI는 NOT EXISTS 처리에 사용되며, 내부에서 매칭 행을 하나라도 찾으면 해당 외부 행을 결과에서 제외한다',
+    tags: ['실행 계획', 'NESTED LOOPS ANTI', 'NOT EXISTS'],
+    explanation: 'NESTED LOOPS ANTI는 NOT EXISTS 서브쿼리를 Anti 세미 조인으로 처리합니다. RESTAURANTS(Id=2)의 각 행에 대해 REVIEWS(Id=3)에서 매칭 행을 하나라도 찾으면 그 음식점은 결과에서 제외됩니다. 매칭이 없는 행만 최종 결과에 포함됩니다.',
+    relatedConceptTags: ['select'],
+    planText: `--------------------------------------------------------------
+| Id | Operation                    | Name         | Rows |
+--------------------------------------------------------------
+|  0 | SELECT STATEMENT             |              |   15 |
+|  1 |  NESTED LOOPS ANTI           |              |   15 |
+|  2 |   TABLE ACCESS FULL          | RESTAURANTS  |  150 |
+|  3 |   INDEX RANGE SCAN           | IDX_REV_RID  |    3 |
+--------------------------------------------------------------
+Predicate Information:
+  1 - access(R.RESTAURANT_ID = RV.RESTAURANT_ID)
+  3 - access(RV.RESTAURANT_ID = R.RESTAURANT_ID)`,
+    choices: [
+      'NESTED LOOPS ANTI는 두 테이블을 전부 조인한 뒤 중복 행을 제거한다',
+      'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다',
+      'NESTED LOOPS ANTI는 내부 테이블 전체를 스캔하여 매칭 수를 집계한 뒤 0인 행만 반환한다',
+      'NESTED LOOPS ANTI는 해시 테이블을 사용하여 매칭 여부를 O(1)로 확인한다',
+    ],
+    choiceExplanations: [
+      { value: 'NESTED LOOPS ANTI는 두 테이블을 전부 조인한 뒤 중복 행을 제거한다', explanation: '틀렸습니다. ANTI 조인은 전체 조인을 하지 않습니다. 매칭 행을 하나라도 발견하면 즉시 해당 외부 행을 제외합니다.' },
+      { value: 'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다', explanation: '정확합니다. ANTI 조인은 내부에서 매칭이 발견되면 해당 외부 행을 건너뛰고, 매칭이 없는 외부 행만 결과에 포함합니다.' },
+      { value: 'NESTED LOOPS ANTI는 내부 테이블 전체를 스캔하여 매칭 수를 집계한 뒤 0인 행만 반환한다', explanation: '틀렸습니다. 매칭 수를 집계하지 않습니다. 첫 번째 매칭 행을 발견하는 즉시 해당 외부 행을 제외합니다.' },
+      { value: 'NESTED LOOPS ANTI는 해시 테이블을 사용하여 매칭 여부를 O(1)로 확인한다', explanation: '틀렸습니다. 해시 테이블 방식은 HASH JOIN ANTI입니다. NESTED LOOPS는 인덱스 또는 전체 스캔으로 매칭을 확인합니다.' },
+    ],
+    correctAnswer: 'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다',
+    hints: {
+      directional: ['ANTI 조인은 SEMI 조인의 반대입니다. SEMI는 매칭이 있으면 포함, ANTI는 매칭이 있으면 제외합니다.'],
+      constraint: ['실행 계획의 Id=3은 인덱스 스캔(INDEX RANGE SCAN)으로, 매칭 여부를 빠르게 확인합니다.'],
+      misconception: ['NOT IN과 NOT EXISTS는 동일한 실행 계획을 갖지 않을 수 있습니다. NULL 포함 여부에 따라 결과도 달라집니다.'],
+    },
+  } as PlanProblem,
+
+  // ssp05 - advanced / 광고 / VIEW (inline view)
+  {
+    id: 'ssp05',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'plan',
+    availableModes: ['write', 'fill'] as const,
+    title: '인라인 뷰 실행 계획 분석 (VIEW)',
+    question: '아래 실행 계획은 광고 서비스 DB에서 인라인 뷰(FROM 절 서브쿼리)를 사용한 SQL의 실행 결과입니다. 실행 계획에 대한 설명으로 올바른 것을 고르세요.',
+    learningPoint: '인라인 뷰는 실행 계획에서 VIEW 오퍼레이션으로 나타나며, 옵티마이저는 경우에 따라 VIEW를 머지(merge)하거나 서브쿼리를 그대로 유지한다',
+    tags: ['실행 계획', 'VIEW', '인라인 뷰'],
+    explanation: 'Id=1의 VIEW 오퍼레이션은 FROM 절의 인라인 뷰가 그대로 유지된 것을 의미합니다. 옵티마이저가 뷰 머지(view merge)를 적용하지 않은 경우, 내부 서브쿼리(AD_LOGS 집계)를 먼저 완전히 실행하여 임시 집합을 만든 뒤 외부 쿼리가 그 결과를 사용합니다. 이는 집계 후 필터링이 필요할 때 뷰 머지보다 유리할 수 있습니다.',
+    relatedConceptTags: ['select'],
+    planText: `------------------------------------------------------------------
+| Id | Operation              | Name        | Rows | Cost |
+------------------------------------------------------------------
+|  0 | SELECT STATEMENT       |             |   20 |  120 |
+|  1 |  HASH JOIN             |             |   20 |  120 |
+|  2 |   VIEW                 |             |   80 |   90 |
+|  3 |    HASH GROUP BY       |             |   80 |   90 |
+|  4 |     TABLE ACCESS FULL  | AD_LOGS     | 5000 |   40 |
+|  5 |   TABLE ACCESS FULL    | CAMPAIGNS   |  100 |   10 |
+------------------------------------------------------------------
+Predicate Information:
+  1 - access(C.AD_ID = V.AD_ID)
+  2 - filter(V.TOTAL_IMPRESSIONS > 1000)`,
+    choices: [
+      'VIEW(Id=1)는 실제 데이터베이스에 저장된 뷰 객체를 조회하는 오퍼레이션이다',
+      'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다',
+      'VIEW(Id=2)의 filter 조건은 AD_LOGS 스캔(Id=4) 이전에 먼저 평가되어 불필요한 행을 제거한다',
+      'HASH JOIN(Id=1)은 CAMPAIGNS를 해시 테이블로 빌드한 뒤 AD_LOGS를 프로브로 사용한다',
+    ],
+    choiceExplanations: [
+      { value: 'VIEW(Id=1)는 실제 데이터베이스에 저장된 뷰 객체를 조회하는 오퍼레이션이다', explanation: '틀렸습니다. 실행 계획의 VIEW 오퍼레이션은 FROM 절의 인라인 뷰(서브쿼리)가 머지되지 않고 별도 처리됨을 나타냅니다. 저장된 뷰와는 다릅니다.' },
+      { value: 'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다', explanation: '정확합니다. 실행 순서는 Id=4(스캔) → Id=3(집계) → Id=2(VIEW 필터 적용) → Id=1(외부 조인) 순입니다. TOTAL_IMPRESSIONS > 1000 필터는 집계가 완료된 후 VIEW 단계에서 적용됩니다.' },
+      { value: 'VIEW(Id=2)의 filter 조건은 AD_LOGS 스캔(Id=4) 이전에 먼저 평가되어 불필요한 행을 제거한다', explanation: '틀렸습니다. TOTAL_IMPRESSIONS는 집계 후에 계산되는 값입니다. 스캔 이전에는 이 값이 없으므로 Ad 스캔 전에 필터를 적용할 수 없습니다.' },
+      { value: 'HASH JOIN(Id=1)은 CAMPAIGNS를 해시 테이블로 빌드한 뒤 AD_LOGS를 프로브로 사용한다', explanation: '틀렸습니다. 실행 계획을 보면 VIEW(Id=2) 결과가 먼저 처리되고 CAMPAIGNS(Id=5)가 뒤에 나옵니다. 일반적으로 해시 빌드는 더 작은 쪽(CAMPAIGNS)이지만, 프로브 입력은 VIEW 결과입니다.' },
+    ],
+    correctAnswer: 'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다',
+    hints: {
+      directional: ['실행 계획의 Id는 트리 구조이므로 실제 실행 순서는 가장 안쪽(높은 Id, 들여쓰기 깊은) 오퍼레이션부터 시작합니다.'],
+      constraint: ['TOTAL_IMPRESSIONS는 GROUP BY 집계 결과 컬럼입니다. 이 값이 생성되기 전에는 필터를 적용할 수 없습니다.'],
+      misconception: ['실행 계획의 VIEW는 CREATE VIEW로 만든 뷰가 아니라, FROM 절 인라인 뷰(서브쿼리)가 머지되지 않았음을 의미합니다.'],
+    },
+  } as PlanProblem,
+
+  // sso02 - basic / IN vs = 구분
+  {
+    id: 'sso02',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '다중행 서브쿼리에 = 사용 가능 여부',
+    question: '다중행 서브쿼리와 단일행 비교 연산자에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '서브쿼리가 여러 행을 반환할 때 = 연산자를 사용하면 오류가 발생한다',
+    tags: ['서브쿼리', '다중행', 'IN'],
+    explanation: '= 연산자는 오른쪽에 단일 값이 와야 합니다. 서브쿼리가 여러 행을 반환하는 경우 = 대신 IN을 사용해야 합니다. = 연산자를 다중행 서브쿼리와 함께 쓰면 "single-row subquery returns more than one row" 오류가 발생합니다.',
+    relatedConceptTags: ['select'],
+    statement: "WHERE department_id = (SELECT id FROM departments WHERE location = '서울') 에서 서브쿼리가 여러 행을 반환해도 = 연산자를 사용할 수 있다.",
+    answer: 'X',
+    hints: {
+      directional: ['= 연산자는 단일 값과의 비교에만 사용됩니다. 서브쿼리가 반환하는 행 수를 고려해 보세요'],
+      misconception: ['다중 행을 반환하는 서브쿼리에는 IN, ANY, ALL 같은 다중행 연산자를 사용해야 합니다'],
+    },
+  } as OxProblem,
+
+  // sso03 - basic / EXISTS 반환값
+  {
+    id: 'sso03',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'EXISTS 연산자의 반환값',
+    question: 'EXISTS 연산자가 반환하는 값에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'EXISTS는 행(row)이 아니라 TRUE 또는 FALSE를 반환한다',
+    tags: ['EXISTS', '서브쿼리'],
+    explanation: 'EXISTS는 서브쿼리의 결과 집합이 하나 이상의 행을 포함하면 TRUE, 아무 행도 없으면 FALSE를 반환합니다. 서브쿼리가 반환하는 실제 컬럼 값은 사용되지 않으며, 관례적으로 SELECT 1 또는 SELECT *을 씁니다.',
+    relatedConceptTags: ['select'],
+    statement: 'EXISTS (서브쿼리)는 서브쿼리가 반환하는 첫 번째 행의 값을 결과로 돌려준다.',
+    answer: 'X',
+    hints: {
+      directional: ['EXISTS는 값 자체가 아니라 서브쿼리에 결과가 있는지 없는지를 판단합니다'],
+      misconception: ['EXISTS는 TRUE/FALSE를 반환합니다. 반환되는 컬럼 값은 결과에 전혀 영향을 미치지 않습니다'],
+    },
+  } as OxProblem,
+
+  // sso04 - basic / 서브쿼리 위치 (FROM 절)
+  {
+    id: 'sso04',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'FROM 절 서브쿼리(인라인 뷰)의 별칭 필요 여부',
+    question: 'FROM 절에 사용되는 서브쿼리(인라인 뷰)에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'FROM 절의 서브쿼리는 반드시 별칭(alias)을 붙여야 한다',
+    tags: ['인라인 뷰', 'FROM 절', '별칭'],
+    explanation: 'FROM 절에 사용하는 서브쿼리는 인라인 뷰(inline view)라고 하며, 외부 쿼리에서 이 서브쿼리를 테이블처럼 참조하려면 반드시 AS 키워드로 별칭을 부여해야 합니다. 별칭이 없으면 문법 오류가 발생합니다.',
+    relatedConceptTags: ['select'],
+    statement: 'SELECT * FROM (SELECT id, name FROM employees) AS emp; 에서 AS emp 별칭은 선택 사항이며 생략해도 문법 오류가 발생하지 않는다.',
+    answer: 'X',
+    hints: {
+      directional: ['FROM 절의 서브쿼리를 외부 쿼리에서 참조하려면 이름이 필요합니다'],
+      misconception: ['대부분의 DBMS(MySQL, PostgreSQL 등)에서 FROM 절 서브쿼리에 별칭이 없으면 오류가 발생합니다'],
+    },
+  } as OxProblem,
+
+  // sso05 - basic / NOT IN + NULL 함정
+  {
+    id: 'sso05',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'NOT IN 서브쿼리와 NULL의 관계',
+    question: 'NOT IN 서브쿼리에서 NULL이 포함될 때의 동작에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'NOT IN 서브쿼리 결과에 NULL이 포함되면 아무 행도 반환되지 않는다',
+    tags: ['NOT IN', 'NULL', '서브쿼리'],
+    explanation: 'NULL과의 비교는 항상 UNKNOWN을 반환합니다. NOT IN 목록에 NULL이 하나라도 있으면 모든 비교가 UNKNOWN이 되어 WHERE 조건을 만족하는 행이 없어집니다. 이 문제를 피하려면 NOT EXISTS나 IS NOT NULL 필터를 추가해야 합니다.',
+    relatedConceptTags: ['select'],
+    statement: 'NOT IN 서브쿼리의 결과 집합에 NULL 값이 포함되면, 메인 쿼리는 아무 행도 반환하지 않는다.',
+    answer: 'O',
+    hints: {
+      directional: ['NULL과의 비교가 어떤 값을 반환하는지 생각해 보세요'],
+      misconception: ['NULL = 값은 FALSE가 아니라 UNKNOWN이 됩니다. NOT IN 처리 시 UNKNOWN은 조건을 만족하지 않는 것으로 처리됩니다'],
+    },
+  } as OxProblem,
+
+  // sso06 - basic / 스칼라 서브쿼리 단일행 제약
+  {
+    id: 'sso06',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '스칼라 서브쿼리의 다중행 반환 허용 여부',
+    question: 'SELECT 절에서 스칼라 서브쿼리가 여러 행을 반환하는 경우를 판단하세요.',
+    learningPoint: '스칼라 서브쿼리가 2행 이상을 반환하면 런타임 오류가 발생한다',
+    tags: ['스칼라 서브쿼리', 'SELECT 절'],
+    explanation: '스칼라 서브쿼리(SELECT 절에 쓰인 서브쿼리)는 반드시 0행 또는 1행, 1열만 반환해야 합니다. 2행 이상을 반환하면 "single-row subquery returns more than one row" 런타임 오류가 발생합니다. 0행을 반환하면 NULL이 됩니다.',
+    relatedConceptTags: ['select'],
+    statement: 'SELECT 절에서 사용하는 스칼라 서브쿼리가 여러 행을 반환해도 첫 번째 행 값만 선택되어 정상 처리된다.',
+    answer: 'X',
+    hints: {
+      directional: ['SELECT 절의 서브쿼리는 단일 값(1행 1열)이어야 합니다. 여러 행이 반환되면 어떻게 될까요?'],
+      misconception: ['첫 번째 행만 선택되는 것이 아니라 오류가 발생합니다. 집계 함수(MAX, MIN 등)로 단일 값을 보장해야 합니다'],
+    },
+  } as OxProblem,
+
+  // sso07 - intermediate / 비상관 서브쿼리 실행 횟수
+  {
+    id: 'sso07',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '비상관 서브쿼리(독립 서브쿼리)의 실행 횟수',
+    question: '비상관 서브쿼리(non-correlated subquery)의 실행 방식에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '비상관 서브쿼리는 외부 쿼리와 독립적으로 단 한 번만 실행된다',
+    tags: ['서브쿼리', '비상관 서브쿼리', '실행 방식'],
+    explanation: '비상관 서브쿼리는 외부 쿼리의 컬럼을 참조하지 않으므로, 외부 쿼리가 실행되기 전에 독립적으로 한 번만 실행됩니다. 이 결과가 캐시되어 외부 쿼리의 각 행 비교에 재사용됩니다. 상관 서브쿼리와 달리 성능 부담이 적습니다.',
+    relatedConceptTags: ['select'],
+    statement: '외부 쿼리의 컬럼을 참조하지 않는 서브쿼리(비상관 서브쿼리)는 외부 쿼리의 행 수에 관계없이 단 한 번만 실행된다.',
+    answer: 'O',
+    hints: {
+      directional: ['서브쿼리가 외부 쿼리의 값에 의존하지 않을 때 어떻게 동작하는지 생각해 보세요'],
+      misconception: ['비상관 서브쿼리는 결과를 한 번 계산하고 재사용합니다. 상관 서브쿼리와 실행 방식이 다릅니다'],
+    },
+  } as OxProblem,
+
+  // sso08 - intermediate / IN vs EXISTS 성능 차이
+  {
+    id: 'sso08',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'EXISTS vs IN의 성능 특성',
+    question: 'EXISTS와 IN의 성능 차이에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'EXISTS는 첫 번째 일치 행을 찾으면 즉시 탐색을 중단한다',
+    tags: ['EXISTS', 'IN', '성능', '서브쿼리'],
+    explanation: 'EXISTS는 서브쿼리에서 첫 번째 일치 행을 발견하는 순간 TRUE를 반환하고 탐색을 중단(short-circuit)합니다. 반면 IN은 서브쿼리의 전체 결과 목록을 먼저 메모리에 만든 후 비교합니다. 서브쿼리 결과 집합이 클 때 EXISTS가 더 유리한 경우가 많습니다.',
+    relatedConceptTags: ['select'],
+    statement: 'EXISTS는 서브쿼리에서 조건을 만족하는 첫 번째 행을 찾는 즉시 나머지 탐색을 중단하므로, 서브쿼리 결과가 많을 때 IN보다 빠를 수 있다.',
+    answer: 'O',
+    hints: {
+      directional: ['EXISTS가 TRUE/FALSE를 결정하는 방식과, IN이 목록을 처리하는 방식을 비교해 보세요'],
+      misconception: ['IN은 서브쿼리의 모든 결과를 구한 후 비교합니다. EXISTS는 하나라도 찾으면 바로 멈출 수 있습니다'],
+    },
+  } as OxProblem,
+
+  // sso09 - intermediate / ANY 연산자 의미
+  {
+    id: 'sso09',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'ANY 연산자와 IN의 동등성',
+    question: '= ANY와 IN의 관계에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '= ANY (서브쿼리)는 IN (서브쿼리)와 동일하게 동작한다',
+    tags: ['ANY', 'IN', '서브쿼리'],
+    explanation: '= ANY는 서브쿼리가 반환한 값 목록 중 하나와 같으면 TRUE를 반환합니다. 이는 IN의 동작과 완전히 동일합니다. 반면 > ANY는 "서브쿼리 결과 중 하나보다 크면 TRUE"이므로 IN과 다릅니다.',
+    relatedConceptTags: ['select'],
+    statement: 'WHERE salary = ANY (SELECT salary FROM employees) 는 WHERE salary IN (SELECT salary FROM employees) 와 동일한 결과를 반환한다.',
+    answer: 'O',
+    hints: {
+      directional: ['= ANY가 목록 중 하나라도 일치하면 TRUE라는 점과 IN의 동작을 비교해 보세요'],
+      misconception: ['> ANY나 < ANY는 IN과 다릅니다. = ANY만 IN과 동일합니다'],
+    },
+  } as OxProblem,
+
+  // sso10 - intermediate / ALL 연산자 의미
+  {
+    id: 'sso10',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '> ALL 연산자의 의미',
+    question: '> ALL 연산자에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '> ALL (서브쿼리)는 서브쿼리가 반환한 모든 값보다 커야 TRUE이다',
+    tags: ['ALL', '서브쿼리'],
+    explanation: '> ALL은 서브쿼리가 반환한 모든 값보다 클 때만 TRUE입니다. 즉 서브쿼리 결과의 MAX보다 큰 경우와 동일합니다. > ALL (SELECT salary FROM ...) 은 > (SELECT MAX(salary) FROM ...)와 같습니다.',
+    relatedConceptTags: ['select'],
+    statement: '> ALL (서브쿼리) 조건은 서브쿼리 결과 중 하나라도 큰 값이 있으면 TRUE를 반환한다.',
+    answer: 'X',
+    hints: {
+      directional: ['ALL은 모든 값에 대해 조건을 만족해야 합니다. 하나라도 는 ANY의 의미입니다'],
+      misconception: ['> ALL은 서브쿼리의 최대값보다 커야 TRUE입니다. 하나라도 는 > ANY의 동작입니다'],
+    },
+  } as OxProblem,
+
+  // sso11 - intermediate / 서브쿼리 vs JOIN 결과 동등성
+  {
+    id: 'sso11',
+    category: 'sql-subquery',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'IN 서브쿼리와 INNER JOIN의 결과 동등성',
+    question: 'IN 서브쿼리와 INNER JOIN이 항상 동일한 결과를 반환하는지 판단하세요.',
+    learningPoint: '중복 행이 있을 경우 IN 서브쿼리와 INNER JOIN은 다른 결과를 낼 수 있다',
+    tags: ['IN', 'JOIN', '서브쿼리', '중복'],
+    explanation: 'INNER JOIN은 조인 키가 중복될 경우 결과 행이 곱해집니다. 예를 들어 한 직원이 여러 프로젝트에 참여하면 JOIN 결과에 해당 직원 행이 여러 번 나타납니다. 반면 IN 서브쿼리는 중복 여부와 관계없이 각 행을 한 번씩만 반환합니다. DISTINCT를 추가하거나 EXISTS로 대체하면 동일한 결과를 만들 수 있습니다.',
+    relatedConceptTags: ['select', 'join'],
+    statement: 'WHERE employee_id IN (SELECT employee_id FROM projects) 는 언제나 employees INNER JOIN projects 와 완전히 동일한 결과 행 수를 반환한다.',
+    answer: 'X',
+    hints: {
+      directional: ['한 직원이 여러 프로젝트에 참여한 경우 두 방식의 결과 행 수를 비교해 보세요'],
+      misconception: ['INNER JOIN은 매칭되는 행의 수만큼 결과가 늘어납니다. IN 서브쿼리는 중복을 자동으로 제거합니다'],
+    },
+  } as OxProblem,
+
+  // sso12 - advanced / HAVING 절 서브쿼리
+  {
+    id: 'sso12',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'HAVING 절에서의 서브쿼리 사용',
+    question: 'HAVING 절에서 서브쿼리를 사용하는 것에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'HAVING 절에도 서브쿼리를 사용하여 그룹 집계값을 외부 기준과 비교할 수 있다',
+    tags: ['HAVING', '서브쿼리', '집계'],
+    explanation: 'HAVING 절은 GROUP BY 이후 그룹을 필터링하며, 이때 서브쿼리를 사용할 수 있습니다. 예를 들어 HAVING COUNT(*) > (SELECT AVG(cnt) FROM ...) 처럼 집계 결과를 서브쿼리로 구한 기준값과 비교할 수 있습니다.',
+    relatedConceptTags: ['select', 'aggregate'],
+    statement: 'HAVING 절에는 서브쿼리를 사용할 수 없으며, 집계 함수와 상수 비교만 가능하다.',
+    answer: 'X',
+    hints: {
+      directional: ['HAVING 절에서 어떤 종류의 조건을 쓸 수 있는지 생각해 보세요'],
+      misconception: ['HAVING 절에도 스칼라 서브쿼리를 사용할 수 있습니다. 집계 결과를 동적으로 구한 기준과 비교할 때 유용합니다'],
+    },
+  } as OxProblem,
+
+  // sso13 - advanced / 인라인 뷰 컬럼 스코프
+  {
+    id: 'sso13',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '인라인 뷰 외부에서 원본 테이블 컬럼 직접 참조',
+    question: '인라인 뷰 외부에서 원본 테이블의 컬럼을 참조하는 것에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '인라인 뷰 외부에서는 인라인 뷰가 SELECT한 컬럼만 참조할 수 있다',
+    tags: ['인라인 뷰', 'FROM 절', '컬럼 스코프'],
+    explanation: '인라인 뷰는 독립적인 스코프를 가집니다. 외부 쿼리에서 인라인 뷰를 통해 접근할 수 있는 컬럼은 인라인 뷰의 SELECT 절에 명시된 컬럼뿐입니다. 인라인 뷰 내부 테이블의 다른 컬럼을 직접 참조하면 "column not found" 오류가 발생합니다.',
+    relatedConceptTags: ['select'],
+    statement: 'SELECT e.salary FROM (SELECT id, name FROM employees) AS e; 처럼 인라인 뷰에서 SELECT하지 않은 컬럼(salary)을 외부 쿼리에서 참조하면 오류가 발생한다.',
+    answer: 'O',
+    hints: {
+      directional: ['인라인 뷰는 일종의 가상 테이블입니다. 그 테이블이 어떤 컬럼을 제공하는지 생각해 보세요'],
+      misconception: ['인라인 뷰가 SELECT하지 않은 컬럼은 외부에서 볼 수 없습니다. 필요한 컬럼을 모두 서브쿼리의 SELECT에 포함해야 합니다'],
+    },
+  } as OxProblem,
+
+  // sso14 - advanced / NOT IN vs NOT EXISTS NULL 처리
+  {
+    id: 'sso14',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'NOT EXISTS는 NULL에 영향을 받지 않는다',
+    question: 'NOT EXISTS와 NULL 처리에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: 'NOT EXISTS는 서브쿼리 컬럼에 NULL이 있어도 올바르게 동작한다',
+    tags: ['NOT EXISTS', 'NULL', '상관 서브쿼리'],
+    explanation: 'NOT EXISTS는 서브쿼리의 행 존재 여부만 확인하고 컬럼 값을 직접 비교하지 않습니다. 따라서 서브쿼리 결과에 NULL이 포함되어도 동작에 영향을 받지 않습니다. 이 점이 NULL로 인해 결과가 비어버리는 NOT IN과의 핵심 차이입니다.',
+    relatedConceptTags: ['select'],
+    statement: 'NOT EXISTS를 사용한 상관 서브쿼리는 서브쿼리가 참조하는 컬럼에 NULL 값이 있어도 의도한 대로 미존재 행을 올바르게 반환한다.',
+    answer: 'O',
+    hints: {
+      directional: ['NOT EXISTS가 값을 비교하는지, 존재 여부만 확인하는지 생각해 보세요'],
+      misconception: ['NOT IN은 NULL이 있으면 모든 비교가 UNKNOWN이 되지만, NOT EXISTS는 존재 여부만 체크하므로 NULL의 영향을 받지 않습니다'],
+    },
+  } as OxProblem,
+
+  // sso15 - advanced / 중첩 서브쿼리 깊이와 성능
+  {
+    id: 'sso15',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '중첩 서브쿼리와 옵티마이저의 JOIN 변환',
+    question: '중첩 서브쿼리의 깊이와 SQL 최적화에 관한 설명이 올바른지 판단하세요.',
+    learningPoint: '대부분의 DBMS 옵티마이저는 서브쿼리를 JOIN으로 변환하여 최적화할 수 있다',
+    tags: ['서브쿼리', '최적화', '옵티마이저'],
+    explanation: '현대 DBMS의 쿼리 옵티마이저는 IN 서브쿼리나 EXISTS 서브쿼리를 내부적으로 JOIN 또는 세미 조인(semi-join)으로 변환하여 실행 계획을 최적화할 수 있습니다. 따라서 서브쿼리로 작성해도 항상 비효율적인 것은 아니며, 실행 계획을 확인하는 것이 중요합니다.',
+    relatedConceptTags: ['select'],
+    statement: '서브쿼리로 작성된 SQL은 옵티마이저가 절대로 JOIN으로 변환할 수 없기 때문에 항상 JOIN 방식보다 느리다.',
+    answer: 'X',
+    hints: {
+      directional: ['현대 DBMS 옵티마이저가 서브쿼리를 어떻게 처리하는지 생각해 보세요'],
+      misconception: ['옵티마이저는 서브쿼리를 세미 조인(semi-join) 등으로 변환하여 최적화합니다. 실제 성능은 실행 계획(EXPLAIN)을 통해 확인해야 합니다'],
     },
   } as OxProblem,
 ];
