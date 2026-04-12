@@ -65,19 +65,35 @@ function getGlobalProgress(): { solved: number; total: number } {
   return { solved, total };
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function QuizShell({ problems, category, categoryName, filterDifficulty, filterType }: Props) {
-  const availableProblems = problems.filter(p => {
+  const filtered = problems.filter(p => {
     if (p.type === 'write') return false;
     if (filterDifficulty && filterDifficulty !== 'all' && p.difficulty !== filterDifficulty) return false;
     if (filterType && filterType !== 'all' && p.type !== filterType) return false;
     return true;
   });
 
+  const [availableProblems, setAvailableProblems] = useState<Problem[]>([]);
   const [index, setIndex] = useState(0);
   const [key, setKey] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null);
   const [globalProgress, setGlobalProgress] = useState({ solved: 0, total: 16 });
+
+  useEffect(() => {
+    setAvailableProblems(shuffle(filtered));
+    setIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, filterDifficulty, filterType]);
 
   useEffect(() => {
     storage.setRecentCategory(category);
