@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
 
 export const SQL_AGGREGATE_PROBLEMS = [
   {
@@ -1196,229 +1196,133 @@ export const SQL_AGGREGATE_PROBLEMS = [
     },
   } as OxProblem,
   {
-    id: 'sap01',
+    id: 'saf31',
     category: 'sql-aggregate',
     difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '전체 집계의 실행 계획',
-    question: `다음은 이커머스 ORDERS 테이블 전체의 총 주문 금액을 구하는 쿼리의 실행 계획입니다.
-이 실행 계획에서 사용된 집계 오퍼레이션의 이름은 무엇이며, 어떤 상황에서 나타납니까?
-
-쿼리: SELECT SUM(order_amount) FROM orders;`,
-    learningPoint: 'SORT AGGREGATE는 GROUP BY 없이 전체 테이블을 하나의 그룹으로 집계할 때 사용되는 오퍼레이션이다.',
-    tags: ['실행계획', 'SORT AGGREGATE', 'SUM', '전체집계'],
-    explanation: `SORT AGGREGATE는 GROUP BY 절 없이 집계 함수(SUM, COUNT, MAX, MIN, AVG)만 사용할 때 Oracle이 선택하는 오퍼레이션입니다.
-이름에 "SORT"가 붙어 있지만 실제로는 정렬을 수행하지 않으며, 테이블 전체를 단 하나의 그룹으로 처리하여 집계 값을 반환합니다.
-반면 SORT GROUP BY는 GROUP BY 컬럼 기준으로 실제 정렬 후 그룹을 나누는 방식입니다.`,
-    relatedConceptTags: ['sort-aggregate', 'full-table-scan', 'aggregation'],
-    planText: `----------------------------------------------
-| Id | Operation          | Name   | Rows  |
-----------------------------------------------
-|  0 | SELECT STATEMENT   |        |     1 |
-|  1 |  SORT AGGREGATE    |        |     1 |
-|  2 |   TABLE ACCESS FULL| ORDERS | 10000 |
-----------------------------------------------`,
-    choices: [
-      'SORT AGGREGATE — GROUP BY 없이 전체를 하나의 그룹으로 집계할 때 사용',
-      'SORT GROUP BY — ORDER BY와 GROUP BY를 동시에 처리할 때 사용',
-      'HASH GROUP BY — 해시 테이블 기반으로 그룹을 나눌 때 사용',
-      'MERGE JOIN — 두 테이블을 정렬 후 병합할 때 사용',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'SUM과 GROUP BY 빈칸 채우기',
+    question: '아래 SQL의 빈칸을 채워 부서별 총 급여 합계를 조회하세요.',
+    learningPoint: 'SUM 집계 함수와 GROUP BY를 함께 사용하여 그룹별 합계를 구하는 방법',
+    tags: ['SUM', 'GROUP BY'],
+    explanation: 'SUM(salary)는 각 그룹 내 salary 값을 모두 더합니다. GROUP BY department_id로 부서별 그룹을 만들면 각 부서의 총 급여를 구할 수 있습니다.',
+    relatedConceptTags: ['aggregate-sum', 'group-by'],
+    sqlTemplate: 'SELECT department_id, ___(salary) FROM employees ___ department_id;',
+    blanks: 2,
+    options: ['SUM', 'AVG', 'GROUP BY', 'ORDER BY', 'COUNT', 'HAVING'],
+    optionExplanations: [
+      { value: 'SUM', explanation: '숫자 컬럼의 합계를 구하는 집계 함수입니다' },
+      { value: 'AVG', explanation: '숫자 컬럼의 평균을 구하는 집계 함수입니다. 합계가 아닌 평균을 반환합니다' },
+      { value: 'GROUP BY', explanation: '지정한 컬럼 기준으로 행을 그룹화하는 절입니다' },
+      { value: 'ORDER BY', explanation: '결과를 정렬하는 절입니다. 그룹화와는 관계없습니다' },
+      { value: 'COUNT', explanation: '행의 개수를 세는 집계 함수입니다. 급여 합계와는 다릅니다' },
+      { value: 'HAVING', explanation: '그룹에 대한 조건을 거는 절입니다. 그룹을 만드는 절이 아닙니다' },
     ],
-    choiceExplanations: [
-      { value: 'SORT AGGREGATE — GROUP BY 없이 전체를 하나의 그룹으로 집계할 때 사용', explanation: '정답입니다. SORT AGGREGATE는 GROUP BY 없이 집계 함수만 사용할 때 나타나며, 실제 정렬 없이 전체 행을 단일 그룹으로 집계합니다.' },
-      { value: 'SORT GROUP BY — ORDER BY와 GROUP BY를 동시에 처리할 때 사용', explanation: '오답입니다. SORT GROUP BY는 GROUP BY 컬럼 기준 정렬을 통해 그룹을 나누는 오퍼레이션으로, 이 쿼리처럼 GROUP BY 절이 없을 때는 나타나지 않습니다.' },
-      { value: 'HASH GROUP BY — 해시 테이블 기반으로 그룹을 나눌 때 사용', explanation: '오답입니다. HASH GROUP BY는 GROUP BY 절이 있을 때 데이터 정렬 없이 해시 테이블로 그룹을 처리하는 방식이며, 이 쿼리에는 GROUP BY가 없습니다.' },
-      { value: 'MERGE JOIN — 두 테이블을 정렬 후 병합할 때 사용', explanation: '오답입니다. MERGE JOIN은 조인 오퍼레이션으로, 단일 테이블 집계와는 무관합니다.' },
-    ],
-    correctAnswer: 'SORT AGGREGATE — GROUP BY 없이 전체를 하나의 그룹으로 집계할 때 사용',
+    correctAnswers: ['SUM', 'GROUP BY'],
     hints: {
-      directional: ['실행 계획 2번 행에 TABLE ACCESS FULL이 있고, 1번 행에 집계 오퍼레이션이 있습니다', 'Rows가 1인 이유는 전체 테이블을 단 하나의 결과 행으로 줄이기 때문입니다'],
-      constraint: ['GROUP BY 절이 쿼리에 없다는 점에 주목하세요'],
-      misconception: ['이름에 SORT가 포함되어 있지만, SORT AGGREGATE는 실제 정렬을 수행하지 않습니다'],
-    },
-  } as PlanProblem,
+      directional: ['합계를 구하는 집계 함수는 SUM입니다'],
+      constraint: ['그룹별 집계를 하려면 GROUP BY 절이 필요합니다'],
+      misconception: ['ORDER BY는 정렬이지 그룹화가 아닙니다. GROUP BY와 혼동하지 마세요'],
+    } as const,
+  } as FillProblem,
   {
-    id: 'sap02',
-    category: 'sql-aggregate',
-    difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'GROUP BY의 SORT GROUP BY 실행 계획',
-    question: `다음은 구독 서비스 SUBSCRIPTIONS 테이블에서 플랜별(plan_type) 구독자 수를 집계하는 쿼리의 실행 계획입니다.
-이 실행 계획을 보고 올바른 해석을 고르세요.
-
-쿼리: SELECT plan_type, COUNT(*) FROM subscriptions GROUP BY plan_type;`,
-    learningPoint: 'SORT GROUP BY는 GROUP BY 컬럼으로 데이터를 정렬한 뒤 연속된 같은 값을 하나의 그룹으로 묶어 집계하는 방식이다.',
-    tags: ['실행계획', 'SORT GROUP BY', 'COUNT', 'GROUP BY'],
-    explanation: `SORT GROUP BY 방식은 GROUP BY 컬럼 기준으로 전체 데이터를 정렬한 후, 정렬된 순서에서 같은 값을 가진 행들을 하나의 그룹으로 집계합니다.
-정렬 비용(O(N log N))이 발생하지만, 데이터가 이미 정렬되어 있거나 결과를 ORDER BY로도 써야 할 때 유리합니다.
-Rows=5는 plan_type의 고유값 개수(예: BASIC, STANDARD, PREMIUM, ENTERPRISE, TRIAL)를 의미합니다.`,
-    relatedConceptTags: ['sort-group-by', 'full-table-scan', 'group-by'],
-    planText: `---------------------------------------------------
-| Id | Operation           | Name          | Rows |
----------------------------------------------------
-|  0 | SELECT STATEMENT    |               |    5 |
-|  1 |  SORT GROUP BY      |               |    5 |
-|  2 |   TABLE ACCESS FULL | SUBSCRIPTIONS | 5000 |
----------------------------------------------------`,
-    choices: [
-      'plan_type 컬럼 값 기준으로 전체 데이터를 정렬 후 그룹별 집계를 수행한다',
-      '인덱스를 활용하여 정렬 없이 그룹을 구성하므로 빠르다',
-      'HASH GROUP BY보다 항상 성능이 우수하다',
-      'Rows=5는 SUBSCRIPTIONS 테이블의 실제 행 수가 5임을 의미한다',
-    ],
-    choiceExplanations: [
-      { value: 'plan_type 컬럼 값 기준으로 전체 데이터를 정렬 후 그룹별 집계를 수행한다', explanation: '정답입니다. SORT GROUP BY는 GROUP BY 컬럼으로 전체 데이터를 정렬한 뒤 연속된 동일 값을 묶어 집계합니다. Rows=5는 최종 그룹(결과 행) 수를 의미합니다.' },
-      { value: '인덱스를 활용하여 정렬 없이 그룹을 구성하므로 빠르다', explanation: '오답입니다. 인덱스를 활용해 정렬 없이 처리하는 것은 INDEX FULL SCAN + SORT GROUP BY NOSORT 형태이며, 이 실행 계획은 TABLE ACCESS FULL이므로 풀스캔 후 정렬을 수행합니다.' },
-      { value: 'HASH GROUP BY보다 항상 성능이 우수하다', explanation: '오답입니다. SORT GROUP BY는 O(N log N) 정렬 비용이 발생하며, 데이터가 많고 GROUP BY 컬럼의 카디널리티가 높을 때는 HASH GROUP BY가 더 유리할 수 있습니다.' },
-      { value: 'Rows=5는 SUBSCRIPTIONS 테이블의 실제 행 수가 5임을 의미한다', explanation: '오답입니다. Rows=5는 해당 오퍼레이션의 예상 출력 행 수입니다. SUBSCRIPTIONS의 전체 행 수는 Id=2의 Rows=5000에 표시되어 있습니다.' },
-    ],
-    correctAnswer: 'plan_type 컬럼 값 기준으로 전체 데이터를 정렬 후 그룹별 집계를 수행한다',
-    hints: {
-      directional: ['Id=1의 오퍼레이션 이름이 무엇인지 확인하세요', 'Id=2의 Rows와 Id=1의 Rows를 비교해 보세요'],
-      constraint: ['TABLE ACCESS FULL은 인덱스를 사용하지 않음을 의미합니다'],
-      misconception: ['Rows 컬럼은 해당 단계의 예상 출력 행 수이며, 테이블 전체 행 수와 다를 수 있습니다'],
-    },
-  } as PlanProblem,
-  {
-    id: 'sap03',
+    id: 'saf32',
     category: 'sql-aggregate',
     difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'HASH GROUP BY 실행 계획',
-    question: `다음은 게임 서비스 GAME_LOGS 테이블에서 유저별(user_id) 총 플레이 시간을 구하는 쿼리의 실행 계획입니다.
-SORT GROUP BY 대신 HASH GROUP BY가 선택된 이유로 가장 적절한 것을 고르세요.
-
-쿼리: SELECT user_id, SUM(play_seconds) FROM game_logs GROUP BY user_id;`,
-    learningPoint: 'HASH GROUP BY는 정렬 없이 해시 테이블로 그룹을 구성하며, 카디널리티가 높거나 대용량 데이터에서 SORT GROUP BY보다 효율적일 수 있다.',
-    tags: ['실행계획', 'HASH GROUP BY', 'SUM', '해시그룹'],
-    explanation: `HASH GROUP BY는 GROUP BY 컬럼 값을 해시 함수로 버킷에 분류하여 그룹을 구성합니다.
-정렬(O(N log N))이 필요 없으므로 데이터 건수가 많고 GROUP BY 컬럼의 카디널리티(고유값 수)가 높을 때 SORT GROUP BY보다 빠릅니다.
-Oracle 옵티마이저는 통계 정보를 기반으로 두 방식 중 더 효율적인 것을 선택하며, user_id처럼 고유값이 많은 컬럼에서는 HASH GROUP BY를 선호하는 경향이 있습니다.
-단, 결과에 ORDER BY가 추가로 필요하다면 다시 정렬 비용이 발생합니다.`,
-    relatedConceptTags: ['hash-group-by', 'full-table-scan', 'cardinality'],
-    planText: `----------------------------------------------
-| Id | Operation          | Name      | Rows  |
-----------------------------------------------
-|  0 | SELECT STATEMENT   |           | 80000 |
-|  1 |  HASH GROUP BY     |           | 80000 |
-|  2 |   TABLE ACCESS FULL| GAME_LOGS |  2000K|
-----------------------------------------------`,
-    choices: [
-      'user_id의 고유값이 매우 많아 정렬 비용보다 해시 분류가 효율적이기 때문',
-      'HASH GROUP BY는 항상 SORT GROUP BY보다 빠르기 때문에 기본 선택',
-      'GAME_LOGS 테이블에 user_id 인덱스가 없기 때문에 강제로 선택됨',
-      'SUM 함수와 함께 사용할 경우 반드시 HASH GROUP BY가 사용되기 때문',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'COUNT(DISTINCT) 빈칸 채우기',
+    question: '아래 SQL의 빈칸을 채워 각 부서에 존재하는 고유한 직급(job_id)의 수를 조회하세요.',
+    learningPoint: 'COUNT(DISTINCT column)는 중복을 제거한 고유값의 개수를 셀 수 있다',
+    tags: ['COUNT', 'DISTINCT', 'GROUP BY'],
+    explanation: 'COUNT(DISTINCT job_id)는 각 그룹 내에서 중복을 제거한 job_id의 고유한 값 개수를 반환합니다. COUNT(job_id)와 달리 같은 직급이 여러 번 나와도 한 번만 셉니다.',
+    relatedConceptTags: ['count-distinct', 'group-by'],
+    sqlTemplate: 'SELECT department_id, COUNT(___ job_id) AS unique_jobs FROM employees GROUP ___ department_id;',
+    blanks: 2,
+    options: ['DISTINCT', 'ALL', 'BY', 'ON', 'UNIQUE', 'HAVING'],
+    optionExplanations: [
+      { value: 'DISTINCT', explanation: '중복을 제거하여 고유한 값만 대상으로 집계합니다' },
+      { value: 'ALL', explanation: 'ALL은 기본값으로, 중복을 포함한 모든 행을 대상으로 집계합니다' },
+      { value: 'BY', explanation: 'GROUP BY의 BY 키워드로, 그룹화 기준 컬럼 앞에 위치합니다' },
+      { value: 'ON', explanation: 'ON은 JOIN 조건이나 특정 구문에 사용되며, GROUP과 함께 쓰이지 않습니다' },
+      { value: 'UNIQUE', explanation: 'UNIQUE는 제약 조건에 사용되며, COUNT 내에서는 DISTINCT를 사용합니다' },
+      { value: 'HAVING', explanation: 'HAVING은 그룹 필터링 절이며, GROUP 뒤에 오는 키워드가 아닙니다' },
     ],
-    choiceExplanations: [
-      { value: 'user_id의 고유값이 매우 많아 정렬 비용보다 해시 분류가 효율적이기 때문', explanation: '정답입니다. Rows=2000K(200만 건)의 대용량 데이터에서 user_id(Rows=80000, 8만 종류)처럼 카디널리티가 높은 컬럼을 GROUP BY할 때, O(N log N) 정렬보다 해시 분류가 효율적이어서 옵티마이저가 HASH GROUP BY를 선택합니다.' },
-      { value: 'HASH GROUP BY는 항상 SORT GROUP BY보다 빠르기 때문에 기본 선택', explanation: '오답입니다. HASH GROUP BY가 항상 빠른 것은 아닙니다. 데이터가 이미 정렬되어 있거나 결과를 정렬해야 한다면 SORT GROUP BY가 더 유리할 수 있습니다.' },
-      { value: 'GAME_LOGS 테이블에 user_id 인덱스가 없기 때문에 강제로 선택됨', explanation: '오답입니다. 인덱스 유무와 HASH GROUP BY 선택은 직접적 인과관계가 없습니다. 인덱스가 없어도 SORT GROUP BY가 선택될 수 있고, 인덱스가 있어도 HASH GROUP BY가 선택될 수 있습니다.' },
-      { value: 'SUM 함수와 함께 사용할 경우 반드시 HASH GROUP BY가 사용되기 때문', explanation: '오답입니다. 집계 함수의 종류(SUM, COUNT, AVG 등)는 HASH GROUP BY와 SORT GROUP BY 선택에 영향을 주지 않습니다. 오퍼레이션 선택은 데이터 분포, 카디널리티, 통계 정보 등을 기반으로 결정됩니다.' },
-    ],
-    correctAnswer: 'user_id의 고유값이 매우 많아 정렬 비용보다 해시 분류가 효율적이기 때문',
+    correctAnswers: ['DISTINCT', 'BY'],
     hints: {
-      directional: ['Id=2의 Rows(원본 행 수)와 Id=1의 Rows(결과 그룹 수)를 비교해 보세요', '데이터 건수가 200만 건이고 그룹이 8만 개라는 상황을 생각해 보세요'],
-      constraint: ['Oracle 옵티마이저는 통계 정보를 기반으로 HASH GROUP BY와 SORT GROUP BY 중 하나를 선택합니다'],
-      misconception: ['HASH GROUP BY가 항상 SORT GROUP BY보다 빠른 것은 아니며, 상황에 따라 다릅니다'],
-    },
-  } as PlanProblem,
+      directional: ['고유한 값의 개수를 세려면 COUNT 안에 중복 제거 키워드를 넣어야 합니다'],
+      constraint: ['GROUP 뒤에 올 수 있는 키워드는 BY입니다'],
+      misconception: ['UNIQUE는 SQL 표준에서 COUNT와 함께 사용하지 않습니다. DISTINCT를 사용하세요'],
+    } as const,
+  } as FillProblem,
   {
-    id: 'sap04',
-    category: 'sql-aggregate',
-    difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'HAVING 절의 FILTER 오퍼레이션',
-    question: `다음은 배달 앱 DELIVERIES 테이블에서 라이더별 평균 배달 시간을 구하고 HAVING으로 필터링하는 쿼리의 실행 계획입니다.
-실행 계획에서 FILTER 오퍼레이션이 나타나는 위치와 그 역할로 올바른 것을 고르세요.
-
-쿼리: SELECT rider_id, AVG(delivery_minutes)
-      FROM deliveries
-      GROUP BY rider_id
-      HAVING AVG(delivery_minutes) > 30;`,
-    learningPoint: 'HAVING 절은 GROUP BY 이후 집계된 결과에 FILTER 오퍼레이션으로 적용되며, 개별 행을 거르는 WHERE와 달리 그룹 단위 필터링을 수행한다.',
-    tags: ['실행계획', 'HAVING', 'FILTER', 'SORT GROUP BY'],
-    explanation: `실행 계획에서 FILTER 오퍼레이션은 SORT GROUP BY 또는 HASH GROUP BY 위에 위치하며, 집계 결과에 HAVING 조건을 적용합니다.
-처리 순서: TABLE ACCESS FULL(전체 스캔) → SORT GROUP BY(그룹 집계) → FILTER(HAVING 조건 적용) → SELECT STATEMENT(반환).
-WHERE 조건은 그룹 집계 이전에 개별 행 단위로 적용되어 별도의 FILTER 없이 스캔 단계에서 처리됩니다.
-HAVING의 FILTER는 이미 집계된 그룹 결과에 대해 동작하므로 집계 함수 결과를 조건으로 사용할 수 있습니다.`,
-    relatedConceptTags: ['having', 'filter', 'sort-group-by', 'where-vs-having'],
-    planText: `-----------------------------------------------
-| Id | Operation           | Name       | Rows |
------------------------------------------------
-|  0 | SELECT STATEMENT    |            |   12 |
-|* 1 |  FILTER             |            |      |
-|  2 |   SORT GROUP BY     |            |   40 |
-|  3 |    TABLE ACCESS FULL| DELIVERIES | 8000 |
------------------------------------------------
-Predicate Information:
-   1 - filter(AVG("DELIVERY_MINUTES")>30)`,
-    choices: [
-      'FILTER는 SORT GROUP BY 위에서 집계된 그룹 결과에 HAVING 조건을 적용한다',
-      'FILTER는 TABLE ACCESS FULL 아래에서 개별 행을 먼저 필터링한다',
-      'FILTER와 WHERE는 실행 계획에서 같은 위치에 나타나며 동일하게 동작한다',
-      'FILTER의 Rows가 비어 있으면 조건에 맞는 행이 0건임을 의미한다',
-    ],
-    choiceExplanations: [
-      { value: 'FILTER는 SORT GROUP BY 위에서 집계된 그룹 결과에 HAVING 조건을 적용한다', explanation: '정답입니다. 실행 계획은 아래서 위로 실행되므로 TABLE ACCESS FULL → SORT GROUP BY → FILTER 순으로 처리됩니다. FILTER(Id=1)는 SORT GROUP BY(Id=2)의 결과에 HAVING 조건을 적용하여 40개 그룹 중 조건을 만족하는 12개만 반환합니다.' },
-      { value: 'FILTER는 TABLE ACCESS FULL 아래에서 개별 행을 먼저 필터링한다', explanation: '오답입니다. FILTER(Id=1)는 TABLE ACCESS FULL(Id=3)보다 상위에 위치하므로 개별 행이 아닌 집계된 그룹 결과에 적용됩니다. 개별 행 필터링은 WHERE 절이며, 실행 계획에서 스캔 단계 Predicate로 표현됩니다.' },
-      { value: 'FILTER와 WHERE는 실행 계획에서 같은 위치에 나타나며 동일하게 동작한다', explanation: '오답입니다. WHERE 조건은 스캔 단계(TABLE ACCESS)의 Predicate로 처리되어 집계 이전에 동작하지만, HAVING의 FILTER는 집계 이후에 별도 오퍼레이션으로 나타납니다.' },
-      { value: 'FILTER의 Rows가 비어 있으면 조건에 맞는 행이 0건임을 의미한다', explanation: '오답입니다. FILTER 오퍼레이션의 Rows가 비어 있는 것은 Oracle 실행 계획에서 해당 행의 예상 건수를 별도 표시하지 않기 때문입니다. 실제 반환 건수는 부모 오퍼레이션(Id=0)의 Rows=12로 확인합니다.' },
-    ],
-    correctAnswer: 'FILTER는 SORT GROUP BY 위에서 집계된 그룹 결과에 HAVING 조건을 적용한다',
-    hints: {
-      directional: ['실행 계획은 들여쓰기 깊이가 깊을수록 먼저 실행됩니다 (아래에서 위로)', 'Predicate Information의 filter 조건이 어떤 Id에 해당하는지 확인하세요'],
-      constraint: ['HAVING은 집계 함수 결과에 조건을 걸 수 있지만, WHERE는 집계 함수 결과에 조건을 걸 수 없습니다'],
-      misconception: ['FILTER 오퍼레이션의 Rows 컬럼이 비어 있는 것은 0건이 아니라, 해당 행의 예상 출력 수가 별도 표기되지 않은 것입니다'],
-    },
-  } as PlanProblem,
-  {
-    id: 'sap05',
+    id: 'saf33',
     category: 'sql-aggregate',
     difficulty: 'advanced',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '인덱스를 활용한 GROUP BY 최적화',
-    question: `다음은 광고 플랫폼 AD_CLICKS 테이블에서 캠페인별(campaign_id) 클릭 수를 집계하는 쿼리의 실행 계획입니다.
-이 실행 계획이 TABLE ACCESS FULL 대신 INDEX FULL SCAN을 사용하는 이유와 SORT GROUP BY NOSORT의 의미를 올바르게 설명한 것을 고르세요.
-
-쿼리: SELECT campaign_id, COUNT(*) FROM ad_clicks GROUP BY campaign_id;
-인덱스: IDX_ADCLICKS_CAMP (campaign_id)`,
-    learningPoint: 'GROUP BY 컬럼에 인덱스가 있으면 INDEX FULL SCAN으로 이미 정렬된 데이터를 읽어 SORT GROUP BY NOSORT(정렬 생략)로 집계할 수 있다.',
-    tags: ['실행계획', 'INDEX FULL SCAN', 'SORT GROUP BY NOSORT', 'GROUP BY 최적화'],
-    explanation: `INDEX FULL SCAN + SORT GROUP BY NOSORT 패턴은 GROUP BY 컬럼에 인덱스가 존재할 때 나타나는 최적화된 실행 계획입니다.
-인덱스는 campaign_id 순서로 정렬되어 저장되어 있으므로, 인덱스 순서대로 읽으면 데이터가 이미 정렬된 상태입니다.
-SORT GROUP BY NOSORT는 "정렬 없이 수행하는 GROUP BY"를 의미하며, 정렬 단계(O(N log N))를 건너뛰므로 성능이 크게 향상됩니다.
-다만 COUNT(*)를 위해 실제 행 데이터가 필요 없으므로 TABLE ACCESS 없이 인덱스만으로 처리 가능합니다.
-이 방식은 쿼리가 인덱스 컬럼만을 SELECT/GROUP BY하는 "인덱스 커버링(Index Only Scan)" 형태일 때 가장 효율적입니다.`,
-    relatedConceptTags: ['index-full-scan', 'sort-group-by-nosort', 'covering-index', 'group-by-optimization'],
-    planText: `----------------------------------------------------------
-| Id | Operation              | Name               | Rows  |
-----------------------------------------------------------
-|  0 | SELECT STATEMENT       |                    |   500 |
-|  1 |  SORT GROUP BY NOSORT  |                    |   500 |
-|  2 |   INDEX FULL SCAN      | IDX_ADCLICKS_CAMP  | 50000 |
-----------------------------------------------------------`,
-    choices: [
-      'campaign_id 인덱스가 이미 정렬된 순서로 데이터를 제공하므로 추가 정렬 없이 GROUP BY를 수행할 수 있다',
-      'NOSORT는 GROUP BY를 생략했다는 뜻이며, 결과 정확도가 낮아질 수 있다',
-      'INDEX FULL SCAN은 TABLE ACCESS FULL보다 항상 빠르므로 옵티마이저가 항상 우선 선택한다',
-      'SORT GROUP BY NOSORT는 Oracle 11g 이상에서만 지원되는 HASH GROUP BY의 별칭이다',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '여러 컬럼 GROUP BY와 HAVING 빈칸 채우기',
+    question: '아래 SQL의 빈칸을 채워 부서별, 직급별 평균 급여를 구하되, 평균 급여가 3000 이상인 그룹만 조회하세요.',
+    learningPoint: 'GROUP BY에 여러 컬럼을 지정하면 컬럼 조합 기준으로 그룹이 나뉘며, HAVING으로 집계 결과를 필터링할 수 있다',
+    tags: ['GROUP BY', 'HAVING', 'AVG', '여러 컬럼'],
+    explanation: 'GROUP BY department_id, job_id는 (부서, 직급) 조합별로 그룹을 만듭니다. HAVING AVG(salary) >= 3000은 집계 결과에서 평균 급여 3000 이상인 그룹만 남깁니다.',
+    relatedConceptTags: ['group-by-multiple', 'having', 'avg'],
+    sqlTemplate: 'SELECT department_id, job_id, AVG(salary) FROM employees GROUP BY department_id, ___ HAVING ___(salary) >= 3000;',
+    blanks: 2,
+    options: ['job_id', 'salary', 'AVG', 'SUM', 'name', 'COUNT'],
+    optionExplanations: [
+      { value: 'job_id', explanation: 'SELECT에 포함된 비집계 컬럼은 GROUP BY에도 포함되어야 합니다' },
+      { value: 'salary', explanation: 'salary는 집계 대상 컬럼이므로 GROUP BY에 넣으면 개별 급여별 그룹이 되어 의미가 달라집니다' },
+      { value: 'AVG', explanation: '평균을 구하는 집계 함수입니다' },
+      { value: 'SUM', explanation: '합계를 구하는 집계 함수입니다. 평균과는 다릅니다' },
+      { value: 'name', explanation: 'name은 그룹화 기준도 아니고 집계 함수도 아닙니다' },
+      { value: 'COUNT', explanation: '행의 개수를 세는 집계 함수입니다. 평균 급여 조건에는 맞지 않습니다' },
     ],
-    choiceExplanations: [
-      { value: 'campaign_id 인덱스가 이미 정렬된 순서로 데이터를 제공하므로 추가 정렬 없이 GROUP BY를 수행할 수 있다', explanation: '정답입니다. IDX_ADCLICKS_CAMP 인덱스는 campaign_id 기준으로 정렬되어 있으므로, 인덱스를 순서대로 스캔하면 데이터가 이미 GROUP BY 기준으로 정렬된 상태입니다. SORT GROUP BY NOSORT는 이 정렬된 상태를 그대로 활용해 추가 정렬 비용 없이 그룹을 집계합니다.' },
-      { value: 'NOSORT는 GROUP BY를 생략했다는 뜻이며, 결과 정확도가 낮아질 수 있다', explanation: '오답입니다. NOSORT는 GROUP BY 자체를 생략하는 것이 아니라, 정렬 단계를 생략한다는 의미입니다. GROUP BY 집계는 정상적으로 수행되며 결과 정확도에는 전혀 영향이 없습니다.' },
-      { value: 'INDEX FULL SCAN은 TABLE ACCESS FULL보다 항상 빠르므로 옵티마이저가 항상 우선 선택한다', explanation: '오답입니다. INDEX FULL SCAN이 항상 빠른 것은 아닙니다. 인덱스에 없는 컬럼이 SELECT에 포함되면 INDEX FULL SCAN + TABLE ACCESS(ROWID)가 필요하여 오히려 느릴 수 있습니다. 옵티마이저는 비용 기반으로 선택합니다.' },
-      { value: 'SORT GROUP BY NOSORT는 Oracle 11g 이상에서만 지원되는 HASH GROUP BY의 별칭이다', explanation: '오답입니다. SORT GROUP BY NOSORT와 HASH GROUP BY는 완전히 다른 오퍼레이션입니다. SORT GROUP BY NOSORT는 인덱스 정렬 순서를 활용한 정렬 생략 방식이고, HASH GROUP BY는 해시 테이블 기반의 그룹화 방식입니다.' },
-    ],
-    correctAnswer: 'campaign_id 인덱스가 이미 정렬된 순서로 데이터를 제공하므로 추가 정렬 없이 GROUP BY를 수행할 수 있다',
+    correctAnswers: ['job_id', 'AVG'],
     hints: {
-      directional: ['인덱스는 어떤 순서로 데이터를 저장하는지 생각해 보세요', 'NOSORT의 SORT와 GROUP BY의 관계를 생각해 보세요 — 정렬이 이미 되어 있다면?'],
-      constraint: ['SELECT와 GROUP BY에 campaign_id만 사용하므로 인덱스만으로 모든 데이터를 제공할 수 있습니다 (커버링 인덱스)'],
-      misconception: ['NOSORT는 GROUP BY를 건너뛰는 것이 아니라, GROUP BY를 위한 정렬 단계를 건너뛰는 것입니다'],
-    },
-  } as PlanProblem,
+      directional: ['SELECT에 있는 비집계 컬럼은 GROUP BY에도 있어야 합니다'],
+      constraint: ['HAVING 절에서 평균을 비교하려면 AVG 함수를 사용해야 합니다'],
+      misconception: ['SUM은 합계이고 AVG는 평균입니다. 문제에서 요구하는 것이 무엇인지 확인하세요'],
+    } as const,
+  } as FillProblem,
+  {
+    id: 'sao16',
+    category: 'sql-aggregate',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'MIN/MAX는 숫자뿐 아니라 문자열에도 사용 가능하다',
+    question: 'MIN과 MAX 집계 함수는 숫자 컬럼에만 사용할 수 있으며, 문자열이나 날짜 컬럼에는 사용할 수 없다.',
+    learningPoint: 'MIN과 MAX는 숫자, 문자열, 날짜 등 비교 가능한 모든 데이터 타입에 사용할 수 있다',
+    tags: ['MIN', 'MAX', '데이터타입'],
+    explanation: 'MIN과 MAX는 비교 연산이 가능한 모든 타입에 사용할 수 있습니다. 문자열은 사전순(알파벳순)으로, 날짜는 시간순으로 비교됩니다. 예를 들어 MAX(hire_date)는 가장 최근 입사일을, MIN(name)은 사전순으로 가장 앞선 이름을 반환합니다.',
+    relatedConceptTags: ['min-max', 'data-types'],
+    statement: 'MIN과 MAX 집계 함수는 숫자 컬럼에만 사용할 수 있으며, 문자열이나 날짜 컬럼에는 사용할 수 없다.',
+    answer: 'X' as const,
+    hints: {
+      directional: ['문자열도 사전순으로 비교가 가능합니다'],
+      constraint: ['MIN/MAX는 비교 연산이 가능한 타입이면 모두 사용할 수 있습니다'],
+      misconception: ['SUM과 AVG는 숫자에만 사용 가능하지만, MIN과 MAX는 다릅니다'],
+    } as const,
+  } as OxProblem,
+  {
+    id: 'sao17',
+    category: 'sql-aggregate',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'WHERE 절에서 집계 함수 사용 가능 여부',
+    question: 'WHERE SUM(salary) > 10000과 같이 WHERE 절에서 직접 집계 함수를 조건으로 사용할 수 있다.',
+    learningPoint: 'WHERE 절에서는 집계 함수를 사용할 수 없으며, 집계 결과에 대한 조건은 HAVING 절에서 처리해야 한다',
+    tags: ['WHERE', 'HAVING', 'SUM', '집계함수'],
+    explanation: 'WHERE 절은 GROUP BY 이전에 개별 행을 필터링하는 단계이므로 아직 집계가 수행되지 않은 상태입니다. 따라서 SUM, COUNT, AVG 등 집계 함수를 WHERE에서 사용하면 문법 오류가 발생합니다. 집계 결과에 대한 조건은 GROUP BY 이후에 동작하는 HAVING 절에서 사용해야 합니다.',
+    relatedConceptTags: ['where-vs-having', 'aggregate-condition'],
+    statement: 'WHERE SUM(salary) > 10000과 같이 WHERE 절에서 직접 집계 함수를 조건으로 사용할 수 있다.',
+    answer: 'X' as const,
+    hints: {
+      directional: ['SQL 실행 순서를 생각해 보세요: FROM → WHERE → GROUP BY → HAVING'],
+      constraint: ['WHERE는 GROUP BY 이전에 실행되므로 집계 결과가 아직 존재하지 않습니다'],
+      misconception: ['집계 함수 조건은 HAVING 절에서 사용해야 합니다. WHERE와 HAVING의 실행 시점이 다릅니다'],
+    } as const,
+  } as OxProblem,
 ];

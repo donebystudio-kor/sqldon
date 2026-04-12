@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
 
 export const SQL_WINDOW_PROBLEMS = [
   {
@@ -806,234 +806,137 @@ export const SQL_WINDOW_PROBLEMS = [
       misconception: ['윈도우 함수는 중첩이 불가능합니다. 부서별 급여합을 먼저 CTE로 계산한 뒤 그 결과에 RANK()를 적용하는 방식으로 분리해야 합니다'],
     },
   } as OxProblem,
-  // ── swp01 ~ swp05 ──────────────────────────────────────────────
+  // ── swf31 ~ swf33, swo16 ~ swo17 ──────────────────────────────
   {
-    id: 'swp01',
+    id: 'swf31',
     category: 'sql-window',
     difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '이커머스 상품 가격 순위 실행 계획 (WINDOW SORT)',
-    question: '아래 Oracle 실행 계획은 products 테이블에서 카테고리별 가격 순위를 구하는 쿼리의 실행 계획입니다. 이 실행 계획에서 "WINDOW SORT" 단계의 역할은 무엇입니까?',
-    learningPoint: 'WINDOW SORT는 윈도우 함수 처리를 위해 ORDER BY 기준으로 데이터를 정렬하는 단계이다',
-    tags: ['WINDOW SORT', 'ROW_NUMBER', 'PARTITION BY', 'ORDER BY'],
-    explanation: 'WINDOW SORT는 Oracle이 윈도우 함수(ROW_NUMBER, RANK 등)를 처리하기 위해 OVER 절의 PARTITION BY + ORDER BY 기준으로 데이터를 정렬하는 단계입니다. 이 정렬 이후 각 파티션 내에서 순위가 계산됩니다.',
-    relatedConceptTags: ['window-function', 'execution-plan'],
-    planText: `------------------------------------------------------------
-| Id | Operation          | Name     | Rows | Cost (%CPU)|
-------------------------------------------------------------
-|  0 | SELECT STATEMENT   |          |  500 |    12   (8)|
-|  1 |  WINDOW SORT       |          |  500 |    12   (8)|
-|  2 |   TABLE ACCESS FULL| PRODUCTS |  500 |    11   (0)|
-------------------------------------------------------------
-
-Query:
-SELECT product_id, category, price,
-  ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rn
-FROM products;`,
-    choices: [
-      'PARTITION BY category와 ORDER BY price DESC 기준으로 데이터를 정렬하여 윈도우 함수가 각 파티션 내 순위를 계산할 수 있도록 준비하는 단계',
-      'TABLE ACCESS FULL로 읽어온 모든 행을 price 기준 오름차순으로 정렬하는 최종 출력용 정렬 단계',
-      'GROUP BY와 동일하게 카테고리별로 행을 집계하여 한 행으로 압축하는 집계 단계',
-      'PRODUCTS 테이블에 인덱스가 없을 때 Full Table Scan 대신 사용되는 소트-머지 단계',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'NTILE로 4분위 그룹 나누기',
+    question: '아래 SQL의 빈칸을 채워 전체 직원을 급여 기준으로 4개 그룹(분위)으로 나누세요.',
+    learningPoint: 'NTILE(n)은 정렬된 결과를 n개의 거의 균등한 그룹으로 나누어 그룹 번호를 반환한다',
+    tags: ['NTILE', 'OVER', 'ORDER BY'],
+    explanation: 'NTILE(4)는 ORDER BY로 정렬된 전체 행을 4개 그룹으로 균등 분배합니다. 행 수가 딱 나누어떨어지지 않으면 앞쪽 그룹에 1행씩 더 배정됩니다. 급여 분위 분석에 자주 사용됩니다.',
+    relatedConceptTags: ['window-function'] as string[],
+    sqlTemplate: 'SELECT name, salary, ___(___) OVER (___ salary DESC) AS quartile FROM employees;',
+    blanks: 3,
+    options: ['NTILE', '4', 'ORDER BY', 'PARTITION BY', 'RANK', 'GROUP BY'],
+    optionExplanations: [
+      { value: 'NTILE', explanation: '결과 집합을 지정한 개수의 그룹으로 균등 분배하는 윈도우 함수입니다' },
+      { value: '4', explanation: 'NTILE의 인자로, 4개 그룹(4분위)으로 나누라는 의미입니다' },
+      { value: 'ORDER BY', explanation: '윈도우 함수 내에서 행의 정렬 순서를 지정합니다' },
+      { value: 'PARTITION BY', explanation: '윈도우를 그룹별로 나누는 절이며, 여기서는 전체를 하나의 파티션으로 사용합니다' },
+      { value: 'RANK', explanation: '동일 값에 같은 순위를 부여하는 함수로, 그룹 분배와는 다릅니다' },
+      { value: 'GROUP BY', explanation: 'OVER 절 안에서는 사용할 수 없습니다. 집계용 절입니다' },
     ],
-    choiceExplanations: [
-      { value: 'PARTITION BY category와 ORDER BY price DESC 기준으로 데이터를 정렬하여 윈도우 함수가 각 파티션 내 순위를 계산할 수 있도록 준비하는 단계', explanation: '정답입니다. WINDOW SORT는 OVER(PARTITION BY ... ORDER BY ...) 절의 기준에 따라 데이터를 정렬하여 이후 윈도우 계산을 가능하게 합니다.' },
-      { value: 'TABLE ACCESS FULL로 읽어온 모든 행을 price 기준 오름차순으로 정렬하는 최종 출력용 정렬 단계', explanation: '오답입니다. 최종 출력 정렬은 SORT ORDER BY로 표시됩니다. WINDOW SORT는 윈도우 함수 처리를 위한 내부 정렬 단계입니다.' },
-      { value: 'GROUP BY와 동일하게 카테고리별로 행을 집계하여 한 행으로 압축하는 집계 단계', explanation: '오답입니다. 윈도우 함수는 GROUP BY와 달리 원본 행 수를 유지합니다. WINDOW SORT는 정렬만 수행하며 행을 집계하거나 압축하지 않습니다.' },
-      { value: 'PRODUCTS 테이블에 인덱스가 없을 때 Full Table Scan 대신 사용되는 소트-머지 단계', explanation: '오답입니다. WINDOW SORT는 인덱스 유무와 관계없이 윈도우 함수 처리를 위해 항상 발생하는 정렬 단계입니다.' },
-    ],
-    correctAnswer: 'PARTITION BY category와 ORDER BY price DESC 기준으로 데이터를 정렬하여 윈도우 함수가 각 파티션 내 순위를 계산할 수 있도록 준비하는 단계',
+    correctAnswers: ['NTILE', '4', 'ORDER BY'],
     hints: {
-      directional: ['WINDOW SORT 단계가 어떤 OVER 절 정보를 사용하는지 생각해보세요'],
-      constraint: ['실행 계획에서 WINDOW SORT는 윈도우 함수 전용 정렬 단계입니다'],
-      misconception: ['WINDOW SORT는 GROUP BY 집계와 다릅니다. 행 수는 그대로 유지됩니다'],
+      directional: ['n개 그룹으로 나누는 윈도우 함수를 떠올려 보세요'],
+      constraint: ['4분위이므로 함수 인자에 숫자 4가 들어가야 합니다'],
+      misconception: ['NTILE은 순위가 아닌 그룹 번호를 반환합니다. RANK와 혼동하지 마세요'],
     },
-  } as PlanProblem,
+  } as FillProblem,
   {
-    id: 'swp02',
-    category: 'sql-window',
-    difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '게임 유저 이전 점수 비교 실행 계획 (WINDOW BUFFER)',
-    question: '아래 Oracle 실행 계획은 게임 scores 테이블에서 LAG 함수를 사용한 쿼리의 실행 계획입니다. "WINDOW BUFFER" 단계가 나타나는 이유는 무엇입니까?',
-    learningPoint: 'WINDOW BUFFER는 LAG/LEAD처럼 인접 행을 참조하는 함수를 처리하기 위해 행을 버퍼에 보관하는 단계이다',
-    tags: ['WINDOW BUFFER', 'LAG', 'LEAD', 'PARTITION BY'],
-    explanation: 'LAG와 LEAD는 현재 행의 이전/다음 행 값을 참조합니다. Oracle은 이를 처리하기 위해 WINDOW BUFFER 단계에서 파티션 내 행들을 메모리 버퍼에 보관하여 인접 행 접근을 가능하게 합니다. 이는 단순 ORDER BY 정렬만으로는 인접 행 참조가 불가능하기 때문입니다.',
-    relatedConceptTags: ['window-function', 'execution-plan'],
-    planText: `------------------------------------------------------------
-| Id | Operation          | Name   | Rows | Cost (%CPU)|
-------------------------------------------------------------
-|  0 | SELECT STATEMENT   |        | 1000 |    15   (7)|
-|  1 |  WINDOW BUFFER     |        | 1000 |    15   (7)|
-|  2 |   TABLE ACCESS FULL| SCORES | 1000 |    14   (0)|
-------------------------------------------------------------
-
-Query:
-SELECT user_id, score, played_at,
-  LAG(score) OVER (PARTITION BY user_id ORDER BY played_at) AS prev_score
-FROM scores;`,
-    choices: [
-      'LAG/LEAD 함수가 현재 행의 이전/다음 행 값을 참조해야 하므로, 파티션 내 행들을 메모리 버퍼에 보관하여 인접 행 접근을 가능하게 하는 단계',
-      'TABLE ACCESS FULL의 I/O 비용을 줄이기 위해 읽어온 블록을 버퍼 캐시에 저장하는 Oracle SGA 관련 단계',
-      'PARTITION BY user_id 기준으로 데이터를 나누어 각 파티션을 별도의 임시 테이블로 저장하는 단계',
-      'scores 테이블이 파티션 테이블일 때 해당 파티션 데이터를 메모리에 로드하는 파티션 프루닝 단계',
-    ],
-    choiceExplanations: [
-      { value: 'LAG/LEAD 함수가 현재 행의 이전/다음 행 값을 참조해야 하므로, 파티션 내 행들을 메모리 버퍼에 보관하여 인접 행 접근을 가능하게 하는 단계', explanation: '정답입니다. WINDOW BUFFER는 LAG/LEAD처럼 인접 행을 참조하는 윈도우 함수를 위해 파티션 내 행들을 버퍼에 보관합니다.' },
-      { value: 'TABLE ACCESS FULL의 I/O 비용을 줄이기 위해 읽어온 블록을 버퍼 캐시에 저장하는 Oracle SGA 관련 단계', explanation: '오답입니다. 실행 계획의 WINDOW BUFFER는 Oracle SGA 버퍼 캐시와 무관하며, 윈도우 함수 처리를 위한 쿼리 실행 단계입니다.' },
-      { value: 'PARTITION BY user_id 기준으로 데이터를 나누어 각 파티션을 별도의 임시 테이블로 저장하는 단계', explanation: '오답입니다. WINDOW BUFFER는 임시 테이블을 생성하지 않습니다. 인접 행 접근을 위해 메모리 내에서 행을 보관하는 단계입니다.' },
-      { value: 'scores 테이블이 파티션 테이블일 때 해당 파티션 데이터를 메모리에 로드하는 파티션 프루닝 단계', explanation: '오답입니다. 파티션 프루닝은 PARTITION RANGE ALL 등으로 표시됩니다. WINDOW BUFFER는 테이블 파티셔닝과 관계없이 LAG/LEAD 처리를 위한 단계입니다.' },
-    ],
-    correctAnswer: 'LAG/LEAD 함수가 현재 행의 이전/다음 행 값을 참조해야 하므로, 파티션 내 행들을 메모리 버퍼에 보관하여 인접 행 접근을 가능하게 하는 단계',
-    hints: {
-      directional: ['LAG 함수가 처리되기 위해 어떤 행 정보가 필요한지 생각해보세요'],
-      constraint: ['WINDOW BUFFER는 LAG/LEAD 전용 실행 단계입니다'],
-      misconception: ['Oracle 버퍼 캐시와 실행 계획의 WINDOW BUFFER는 서로 다른 개념입니다'],
-    },
-  } as PlanProblem,
-  {
-    id: 'swp03',
+    id: 'swf32',
     category: 'sql-window',
     difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '광고 캠페인 Top-N 최적화 실행 계획 (WINDOW SORT PUSHED RANK)',
-    question: '아래 Oracle 실행 계획은 광고 캠페인에서 카테고리별 상위 3개 광고를 추출하는 쿼리의 실행 계획입니다. "WINDOW SORT PUSHED RANK" 단계의 최적화 의미는 무엇입니까?',
-    learningPoint: 'WINDOW SORT PUSHED RANK는 Top-N 쿼리에서 Oracle이 전체 정렬 없이 조기에 N건 이상을 자르는 최적화를 적용한 실행 단계이다',
-    tags: ['WINDOW SORT PUSHED RANK', 'ROW_NUMBER', 'TOP-N', '최적화'],
-    explanation: 'WINDOW SORT PUSHED RANK는 ROW_NUMBER/RANK와 WHERE rn <= N 패턴에서 Oracle 옵티마이저가 적용하는 최적화입니다. 전체 데이터를 정렬하지 않고, 각 파티션에서 N건만 유지하면서 처리하여 메모리와 CPU를 절약합니다.',
-    relatedConceptTags: ['window-function', 'execution-plan', 'optimization'],
-    planText: `------------------------------------------------------------------
-| Id | Operation                    | Name    | Rows | Cost (%CPU)|
-------------------------------------------------------------------
-|  0 | SELECT STATEMENT             |         |   30 |    13   (8)|
-|* 1 |  VIEW                        |         |   30 |    13   (8)|
-|* 2 |   WINDOW SORT PUSHED RANK    |         |  300 |    13   (8)|
-|  3 |    TABLE ACCESS FULL         | AD_LOGS |  300 |    12   (0)|
-------------------------------------------------------------------
-Predicate Information:
-   1 - filter("RN"<=3)
-   2 - filter(RANK() OVER (PARTITION BY "CATEGORY" ORDER BY "CTR" DESC)<=3)
-
-Query:
-SELECT * FROM (
-  SELECT ad_id, category, ctr,
-    ROW_NUMBER() OVER (PARTITION BY category ORDER BY ctr DESC) AS rn
-  FROM ad_logs
-) WHERE rn <= 3;`,
-    choices: [
-      '각 파티션에서 상위 N건 이상 데이터를 조기에 제거하여 전체 정렬 비용을 줄이는 Top-N 최적화 단계로, 불필요한 행을 소트 중에 미리 필터링한다',
-      '윈도우 함수 계산 전 WHERE 조건을 먼저 적용하는 Predicate Pushdown으로, 테이블에서 읽는 행 수 자체를 줄이는 단계',
-      'RANK 함수를 DENSE_RANK로 자동 변환하여 순위 계산 성능을 향상시키는 옵티마이저 변환 단계',
-      '인덱스 스캔이 불가할 때 소트-머지 조인 방식으로 데이터를 처리하는 대체 실행 경로',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'LEAD로 다음 행 값 가져오기',
+    question: '아래 SQL의 빈칸을 채워 각 주문의 다음 주문 금액을 함께 조회하세요. 같은 고객(customer_id) 내에서 주문일(order_date) 순으로 비교합니다.',
+    learningPoint: 'LEAD(컬럼)은 현재 행 기준으로 다음 행의 값을 반환하는 윈도우 함수이다',
+    tags: ['LEAD', 'PARTITION BY', 'ORDER BY'],
+    explanation: 'LEAD(amount)는 현재 행 다음에 오는 행의 amount 값을 반환합니다. PARTITION BY customer_id로 고객별로 나누고, ORDER BY order_date로 시간순 정렬하면 각 주문의 다음 주문 금액을 확인할 수 있습니다. 마지막 행은 다음 행이 없어 NULL이 됩니다.',
+    relatedConceptTags: ['window-function'] as string[],
+    sqlTemplate: 'SELECT customer_id, order_date, amount, ___(amount) OVER (___ customer_id ___ order_date) AS next_amount FROM orders;',
+    blanks: 3,
+    options: ['LEAD', 'LAG', 'PARTITION BY', 'ORDER BY', 'FIRST_VALUE', 'GROUP BY'],
+    optionExplanations: [
+      { value: 'LEAD', explanation: '현재 행 기준 다음 행의 값을 반환합니다. 기본 오프셋은 1입니다' },
+      { value: 'LAG', explanation: '현재 행 기준 이전 행의 값을 반환합니다. 다음 행이 아닌 이전 행입니다' },
+      { value: 'PARTITION BY', explanation: '윈도우를 그룹별로 나누는 절입니다. 여기서는 고객별로 나눕니다' },
+      { value: 'ORDER BY', explanation: '파티션 내 행의 정렬 순서를 지정합니다' },
+      { value: 'FIRST_VALUE', explanation: '파티션 내 첫 번째 행의 값을 반환합니다. 다음 행과는 다릅니다' },
+      { value: 'GROUP BY', explanation: 'OVER 절 안에서는 사용할 수 없습니다' },
     ],
-    choiceExplanations: [
-      { value: '각 파티션에서 상위 N건 이상 데이터를 조기에 제거하여 전체 정렬 비용을 줄이는 Top-N 최적화 단계로, 불필요한 행을 소트 중에 미리 필터링한다', explanation: '정답입니다. WINDOW SORT PUSHED RANK는 Top-N 쿼리 패턴(rn <= N)에서 Oracle이 소트 과정 중 N건을 초과하는 행을 조기에 버려 메모리와 CPU를 절약하는 최적화입니다.' },
-      { value: '윈도우 함수 계산 전 WHERE 조건을 먼저 적용하는 Predicate Pushdown으로, 테이블에서 읽는 행 수 자체를 줄이는 단계', explanation: '오답입니다. 이 최적화는 테이블에서 읽는 행 수를 직접 줄이지 않습니다. WINDOW SORT PUSHED RANK는 소트 단계에서 불필요 행을 제거하는 최적화입니다.' },
-      { value: 'RANK 함수를 DENSE_RANK로 자동 변환하여 순위 계산 성능을 향상시키는 옵티마이저 변환 단계', explanation: '오답입니다. Oracle 옵티마이저는 RANK를 DENSE_RANK로 변환하지 않습니다. WINDOW SORT PUSHED RANK는 Top-N 패턴 감지 시 적용되는 소트 최적화입니다.' },
-      { value: '인덱스 스캔이 불가할 때 소트-머지 조인 방식으로 데이터를 처리하는 대체 실행 경로', explanation: '오답입니다. 소트-머지 조인(SORT MERGE JOIN)은 두 테이블을 조인할 때 사용됩니다. WINDOW SORT PUSHED RANK는 단일 테이블 윈도우 함수 처리의 Top-N 최적화 단계입니다.' },
-    ],
-    correctAnswer: '각 파티션에서 상위 N건 이상 데이터를 조기에 제거하여 전체 정렬 비용을 줄이는 Top-N 최적화 단계로, 불필요한 행을 소트 중에 미리 필터링한다',
+    correctAnswers: ['LEAD', 'PARTITION BY', 'ORDER BY'],
     hints: {
-      directional: ['WHERE rn <= 3 조건이 실행 계획에서 어떻게 소트 단계에 영향을 주는지 생각해보세요'],
-      constraint: ['PUSHED RANK의 "PUSHED"는 조건이 소트 단계로 밀려들어간다는 의미입니다'],
-      misconception: ['이 단계는 테이블에서 읽는 행 수를 줄이는 것이 아니라 소트 중 불필요 행을 버리는 최적화입니다'],
+      directional: ['다음 행의 값을 가져오는 윈도우 함수는 무엇인지 떠올려 보세요'],
+      constraint: ['고객별로 나누어야 하므로 PARTITION BY가 필요합니다'],
+      misconception: ['LAG는 이전 행, LEAD는 다음 행입니다. 방향을 혼동하지 마세요'],
     },
-  } as PlanProblem,
+  } as FillProblem,
   {
-    id: 'swp04',
-    category: 'sql-window',
-    difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '배달 주문 누적 집계 후 정렬 실행 계획 (WINDOW SORT + SORT ORDER BY)',
-    question: '아래 Oracle 실행 계획에는 WINDOW SORT와 SORT ORDER BY가 모두 나타납니다. 이 두 단계가 각각 별도로 존재하는 이유는 무엇입니까?',
-    learningPoint: 'WINDOW SORT의 ORDER BY와 최종 출력의 ORDER BY가 다를 때 두 개의 소트 단계가 발생한다',
-    tags: ['WINDOW SORT', 'SORT ORDER BY', 'ORDER BY', '실행계획'],
-    explanation: 'WINDOW SORT는 OVER(PARTITION BY restaurant_id ORDER BY delivered_at) 처리를 위해 restaurant_id, delivered_at 기준으로 정렬합니다. 이후 최종 출력을 cumulative_amount DESC로 정렬해야 하므로 별도의 SORT ORDER BY 단계가 추가됩니다. 두 정렬 기준이 다르기 때문에 두 번 정렬이 발생합니다.',
-    relatedConceptTags: ['window-function', 'execution-plan'],
-    planText: `--------------------------------------------------------------------
-| Id | Operation           | Name       | Rows | Cost (%CPU)|
---------------------------------------------------------------------
-|  0 | SELECT STATEMENT    |            | 2000 |    28  (15)|
-|  1 |  SORT ORDER BY      |            | 2000 |    28  (15)|
-|  2 |   WINDOW SORT       |            | 2000 |    25   (8)|
-|  3 |    TABLE ACCESS FULL| DELIVERIES | 2000 |    24   (0)|
---------------------------------------------------------------------
-
-Query:
-SELECT order_id, restaurant_id, amount, delivered_at,
-  SUM(amount) OVER (PARTITION BY restaurant_id ORDER BY delivered_at) AS cumulative_amount
-FROM deliveries
-ORDER BY cumulative_amount DESC;`,
-    choices: [
-      'WINDOW SORT는 OVER 절의 PARTITION BY restaurant_id ORDER BY delivered_at을 위한 정렬이고, SORT ORDER BY는 최종 출력의 ORDER BY cumulative_amount DESC를 위한 별도 정렬이다',
-      'WINDOW SORT는 데이터를 읽는 단계이고 SORT ORDER BY는 중복을 제거하는 단계로, 두 단계가 합쳐져 DISTINCT와 동일한 효과를 낸다',
-      'Oracle이 비용 절감을 위해 한 번의 소트를 두 단계로 나누어 메모리 사용량을 줄이는 분할 정복 방식의 실행 계획이다',
-      'WINDOW SORT는 파티션 키(restaurant_id) 기준 해시 분배 후 정렬이고, SORT ORDER BY는 병렬 처리 결과를 하나로 합치는 병합 단계이다',
-    ],
-    choiceExplanations: [
-      { value: 'WINDOW SORT는 OVER 절의 PARTITION BY restaurant_id ORDER BY delivered_at을 위한 정렬이고, SORT ORDER BY는 최종 출력의 ORDER BY cumulative_amount DESC를 위한 별도 정렬이다', explanation: '정답입니다. 두 ORDER BY의 기준이 다르기 때문에 Oracle은 윈도우 함수 처리용 정렬과 최종 출력 정렬을 각각 별도로 수행합니다.' },
-      { value: 'WINDOW SORT는 데이터를 읽는 단계이고 SORT ORDER BY는 중복을 제거하는 단계로, 두 단계가 합쳐져 DISTINCT와 동일한 효과를 낸다', explanation: '오답입니다. WINDOW SORT는 데이터를 읽는 단계가 아닙니다. 두 소트 단계 모두 중복 제거와 무관하며, 각각 다른 정렬 목적을 가집니다.' },
-      { value: 'Oracle이 비용 절감을 위해 한 번의 소트를 두 단계로 나누어 메모리 사용량을 줄이는 분할 정복 방식의 실행 계획이다', explanation: '오답입니다. 두 소트 단계는 비용 절감을 위한 분할이 아닙니다. 윈도우 함수용 정렬과 최종 출력 정렬의 기준이 달라 불가피하게 두 번 정렬이 발생합니다.' },
-      { value: 'WINDOW SORT는 파티션 키(restaurant_id) 기준 해시 분배 후 정렬이고, SORT ORDER BY는 병렬 처리 결과를 하나로 합치는 병합 단계이다', explanation: '오답입니다. 이 실행 계획은 병렬 처리(PARALLEL)를 사용하지 않습니다. 두 소트 단계는 단순히 서로 다른 ORDER BY 기준을 처리하기 위한 순차적 단계입니다.' },
-    ],
-    correctAnswer: 'WINDOW SORT는 OVER 절의 PARTITION BY restaurant_id ORDER BY delivered_at을 위한 정렬이고, SORT ORDER BY는 최종 출력의 ORDER BY cumulative_amount DESC를 위한 별도 정렬이다',
-    hints: {
-      directional: ['쿼리에서 ORDER BY가 몇 번 사용되었는지, 각각 어떤 기준인지 확인해보세요'],
-      constraint: ['WINDOW SORT의 정렬 기준(delivered_at)과 SORT ORDER BY의 기준(cumulative_amount DESC)이 다릅니다'],
-      misconception: ['WINDOW SORT와 SORT ORDER BY는 같은 정렬을 중복 수행하는 것이 아닙니다. 각각 목적이 다른 별도의 정렬 단계입니다'],
-    },
-  } as PlanProblem,
-  {
-    id: 'swp05',
+    id: 'swf33',
     category: 'sql-window',
     difficulty: 'advanced',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '구독 플랜별 집계와 윈도우 함수 결합 실행 계획 (HASH GROUP BY + WINDOW SORT)',
-    question: '아래 Oracle 실행 계획은 구독 플랜별 총 매출을 집계하고 전월 대비 변화량을 계산하는 쿼리의 실행 계획입니다. HASH GROUP BY와 WINDOW SORT가 함께 나타나는 이유와 처리 순서를 올바르게 설명한 것은 무엇입니까?',
-    learningPoint: 'HASH GROUP BY로 먼저 집계한 후 WINDOW SORT로 윈도우 함수를 처리하는 순서로 실행된다. 집계 결과에 윈도우 함수를 적용하는 패턴이다',
-    tags: ['HASH GROUP BY', 'WINDOW SORT', 'LAG', 'GROUP BY', '집계'],
-    explanation: 'GROUP BY를 포함한 쿼리에 윈도우 함수를 적용할 때, Oracle은 먼저 HASH GROUP BY로 집계를 완료한 후 그 결과에 WINDOW SORT를 적용하여 윈도우 함수를 계산합니다. 이는 SQL의 논리적 처리 순서(GROUP BY → 윈도우 함수)를 반영합니다.',
-    relatedConceptTags: ['window-function', 'execution-plan', 'group-by'],
-    planText: `--------------------------------------------------------------------
-| Id | Operation            | Name          | Rows | Cost (%CPU)|
---------------------------------------------------------------------
-|  0 | SELECT STATEMENT     |               |   12 |    18  (17)|
-|  1 |  WINDOW SORT         |               |   12 |    18  (17)|
-|  2 |   HASH GROUP BY      |               |   12 |    18  (17)|
-|  3 |    TABLE ACCESS FULL | SUBSCRIPTIONS | 5000 |    15   (0)|
---------------------------------------------------------------------
-
-Query:
-SELECT plan_id,
-       TO_CHAR(TRUNC(start_date, 'MM'), 'YYYY-MM') AS month,
-       SUM(amount) AS monthly_revenue,
-       LAG(SUM(amount)) OVER (PARTITION BY plan_id ORDER BY TRUNC(start_date, 'MM')) AS prev_revenue
-FROM subscriptions
-GROUP BY plan_id, TRUNC(start_date, 'MM');`,
-    choices: [
-      'TABLE ACCESS FULL → HASH GROUP BY(plan_id, 월별 집계) → WINDOW SORT(집계 결과에 LAG 적용) 순으로 실행되며, GROUP BY 집계가 완료된 후 윈도우 함수가 그 결과에 적용된다',
-      'TABLE ACCESS FULL → WINDOW SORT(LAG 계산) → HASH GROUP BY(plan_id, 월별 집계) 순으로 실행되며, 윈도우 함수가 먼저 처리된 후 GROUP BY로 집계된다',
-      'HASH GROUP BY와 WINDOW SORT는 병렬로 동시에 실행되어 TABLE ACCESS FULL 결과를 각각 독립적으로 처리한 뒤 최종 결합한다',
-      'HASH GROUP BY는 GROUP BY 없이 DISTINCT 처리를 위해, WINDOW SORT는 ORDER BY 출력 정렬을 위해 각각 사용되는 독립적 단계이다',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'ROWS BETWEEN으로 이동 평균 구하기',
+    question: '아래 SQL의 빈칸을 채워 일별 매출의 3일 이동 평균(현재 행 포함 이전 2행)을 구하세요.',
+    learningPoint: 'ROWS BETWEEN n PRECEDING AND CURRENT ROW로 현재 행 기준 직전 n행까지의 프레임을 지정할 수 있다',
+    tags: ['AVG() OVER', 'ROWS BETWEEN', 'PRECEDING', 'CURRENT ROW'],
+    explanation: 'ROWS BETWEEN 2 PRECEDING AND CURRENT ROW는 현재 행 포함 이전 2행, 총 3행을 윈도우 프레임으로 지정합니다. 이 프레임에 AVG를 적용하면 3일 이동 평균이 됩니다. 데이터가 부족한 초기 행은 존재하는 행만으로 평균을 계산합니다.',
+    relatedConceptTags: ['window-function'] as string[],
+    sqlTemplate: 'SELECT sale_date, amount, AVG(amount) OVER (ORDER BY sale_date ___ ___ 2 PRECEDING AND ___) AS moving_avg FROM daily_sales;',
+    blanks: 3,
+    options: ['ROWS BETWEEN', 'RANGE BETWEEN', 'CURRENT ROW', 'UNBOUNDED FOLLOWING', '2 PRECEDING', 'UNBOUNDED PRECEDING'],
+    optionExplanations: [
+      { value: 'ROWS BETWEEN', explanation: '물리적 행 수 기준으로 윈도우 프레임을 지정합니다. 정확히 n행을 지정할 때 사용합니다' },
+      { value: 'RANGE BETWEEN', explanation: '값의 범위 기준으로 프레임을 지정합니다. 물리적 행 수가 아닌 논리적 범위입니다' },
+      { value: 'CURRENT ROW', explanation: '윈도우 프레임의 끝점으로, 현재 행까지를 의미합니다' },
+      { value: 'UNBOUNDED FOLLOWING', explanation: '파티션의 마지막 행까지를 의미합니다. 이동 평균에는 적합하지 않습니다' },
+      { value: '2 PRECEDING', explanation: '현재 행 기준 2행 이전을 의미합니다' },
+      { value: 'UNBOUNDED PRECEDING', explanation: '파티션의 첫 번째 행부터를 의미합니다. 누적 계산에 사용됩니다' },
     ],
-    choiceExplanations: [
-      { value: 'TABLE ACCESS FULL → HASH GROUP BY(plan_id, 월별 집계) → WINDOW SORT(집계 결과에 LAG 적용) 순으로 실행되며, GROUP BY 집계가 완료된 후 윈도우 함수가 그 결과에 적용된다', explanation: '정답입니다. Oracle 실행 계획은 아래에서 위로 읽습니다. FULL SCAN → HASH GROUP BY → WINDOW SORT 순으로 처리되며, GROUP BY 집계 결과에 LAG 윈도우 함수가 적용됩니다.' },
-      { value: 'TABLE ACCESS FULL → WINDOW SORT(LAG 계산) → HASH GROUP BY(plan_id, 월별 집계) 순으로 실행되며, 윈도우 함수가 먼저 처리된 후 GROUP BY로 집계된다', explanation: '오답입니다. 실행 계획은 아래에서 위로 읽으므로 HASH GROUP BY(Id=2)가 WINDOW SORT(Id=1)보다 먼저 실행됩니다. SQL 논리적 순서상 GROUP BY가 윈도우 함수보다 먼저 처리됩니다.' },
-      { value: 'HASH GROUP BY와 WINDOW SORT는 병렬로 동시에 실행되어 TABLE ACCESS FULL 결과를 각각 독립적으로 처리한 뒤 최종 결합한다', explanation: '오답입니다. 이 실행 계획은 병렬 실행이 아닙니다. HASH GROUP BY와 WINDOW SORT는 순차적으로 실행되며, WINDOW SORT는 HASH GROUP BY의 출력을 입력으로 받습니다.' },
-      { value: 'HASH GROUP BY는 GROUP BY 없이 DISTINCT 처리를 위해, WINDOW SORT는 ORDER BY 출력 정렬을 위해 각각 사용되는 독립적 단계이다', explanation: '오답입니다. 이 쿼리에는 GROUP BY가 명시되어 있으므로 HASH GROUP BY는 GROUP BY 집계를 위한 단계입니다. WINDOW SORT는 출력 정렬이 아닌 LAG 윈도우 함수 처리를 위한 단계입니다.' },
-    ],
-    correctAnswer: 'TABLE ACCESS FULL → HASH GROUP BY(plan_id, 월별 집계) → WINDOW SORT(집계 결과에 LAG 적용) 순으로 실행되며, GROUP BY 집계가 완료된 후 윈도우 함수가 그 결과에 적용된다',
+    correctAnswers: ['ROWS BETWEEN', 'CURRENT ROW'],
     hints: {
-      directional: ['Oracle 실행 계획은 Id가 높은 단계(아래)부터 실행됩니다. Id 순서대로 처리 흐름을 따라가 보세요'],
-      constraint: ['SQL 논리적 처리 순서에서 GROUP BY는 윈도우 함수보다 먼저 처리됩니다'],
-      misconception: ['실행 계획을 위에서 아래로 읽으면 실행 순서가 반대로 이해될 수 있습니다. 실제 실행은 Id가 큰 단계부터 시작합니다'],
+      directional: ['물리적 행 수를 기준으로 프레임을 지정하는 키워드를 생각해보세요'],
+      constraint: ['프레임의 끝점은 현재 행이어야 합니다'],
+      misconception: ['RANGE BETWEEN은 값 범위 기준이므로, 정확히 3행의 이동 평균에는 ROWS BETWEEN이 적합합니다'],
     },
-  } as PlanProblem,
+  } as FillProblem,
+  {
+    id: 'swo16',
+    category: 'sql-window',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'DENSE_RANK는 순위를 건너뛰지 않는다',
+    question: '다음 설명이 맞으면 O, 틀리면 X를 선택하세요.',
+    learningPoint: 'DENSE_RANK는 동일 값에 같은 순위를 부여하되, 다음 순위를 건너뛰지 않는다',
+    tags: ['DENSE_RANK', 'RANK'],
+    explanation: 'DENSE_RANK()는 동일 값에 같은 순위를 부여하고, 그 다음 순위를 건너뛰지 않습니다. 예를 들어 1등이 2명이면 다음은 2등입니다. 반면 RANK()는 1등이 2명이면 다음이 3등으로 건너뜁니다.',
+    relatedConceptTags: ['window-function'] as string[],
+    statement: 'DENSE_RANK() 함수는 동일한 값에 같은 순위를 부여하며, 다음 순위 번호를 건너뛰지 않는다. 예: 1등이 2명이면 그 다음은 2등이다.',
+    answer: 'O' as const,
+    hints: {
+      directional: ['DENSE_RANK와 RANK의 차이점을 생각해보세요'],
+      constraint: ['DENSE는 "밀집한"이라는 의미입니다. 순위가 빈틈 없이 이어집니다'],
+      misconception: ['RANK()와 혼동하기 쉽습니다. RANK()는 동일 순위 뒤에 건너뛰고, DENSE_RANK()는 건너뛰지 않습니다'],
+    },
+  } as OxProblem,
+  {
+    id: 'swo17',
+    category: 'sql-window',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'FIRST_VALUE와 LAST_VALUE의 기본 프레임 차이',
+    question: '다음 설명이 맞으면 O, 틀리면 X를 선택하세요.',
+    learningPoint: 'LAST_VALUE는 기본 프레임(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 때문에 기대와 다른 결과를 반환할 수 있다',
+    tags: ['FIRST_VALUE', 'LAST_VALUE', 'ROWS BETWEEN', '프레임'],
+    explanation: 'LAST_VALUE()는 기본 윈도우 프레임이 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW이므로, 현재 행까지만 보고 마지막 값을 반환합니다. 파티션 전체의 마지막 값을 원한다면 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING을 명시해야 합니다. 이는 FIRST_VALUE()와 달리 주의가 필요한 부분입니다.',
+    relatedConceptTags: ['window-function'] as string[],
+    statement: 'LAST_VALUE() 함수에 별도의 프레임 절을 지정하지 않으면, 항상 파티션 전체에서 마지막 행의 값을 반환한다.',
+    answer: 'X' as const,
+    hints: {
+      directional: ['윈도우 함수의 기본 프레임 범위가 어디까지인지 생각해보세요'],
+      constraint: ['기본 프레임은 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW입니다'],
+      misconception: ['LAST_VALUE는 이름과 달리 기본 프레임에서는 "현재 행까지의 마지막 값"을 반환합니다. 파티션 전체의 마지막이 아닙니다'],
+    },
+  } as OxProblem,
   // ── swf17 ~ swf30 ──────────────────────────────────────────────
   {
     id: 'swf17',

@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
 
 export const SQL_SUBQUERY_PROBLEMS = [
   {
@@ -1005,228 +1005,143 @@ export const SQL_SUBQUERY_PROBLEMS = [
     },
   } as OxProblem,
 
-  // ssp01 - basic / 이커머스 / FILTER (correlated subquery)
+  // ssf31 - basic / 스칼라 서브쿼리 빈칸 채우기
   {
-    id: 'ssp01',
+    id: 'ssf31',
     category: 'sql-subquery',
     difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '상관 서브쿼리의 실행 계획 읽기 (FILTER)',
-    question: '아래 실행 계획은 이커머스 DB에서 상관 서브쿼리를 포함한 SQL을 실행했을 때의 결과입니다. 어떤 Operation이 상관 서브쿼리의 반복 실행을 나타내는지 고르세요.',
-    learningPoint: 'FILTER 오퍼레이션은 상관 서브쿼리를 외부 쿼리 각 행마다 반복 실행할 때 실행 계획에 나타난다',
-    tags: ['실행 계획', 'FILTER', '상관 서브쿼리'],
-    explanation: 'FILTER 오퍼레이션은 WHERE 절의 상관 서브쿼리를 처리할 때 나타납니다. 외부 쿼리(CUSTOMERS)에서 각 행을 읽을 때마다 Id=3의 ORDERS 스캔을 반복 실행하여 조건을 평가합니다.',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'SELECT 절 스칼라 서브쿼리',
+    question: '아래 SQL의 빈칸을 채워 각 직원의 이름과 소속 부서명을 함께 조회하세요. 스칼라 서브쿼리를 사용합니다.',
+    learningPoint: 'SELECT 절에서 스칼라 서브쿼리를 사용하면 각 행마다 단일 값을 반환하는 서브쿼리를 컬럼처럼 사용할 수 있다',
+    tags: ['서브쿼리', '스칼라 서브쿼리'],
+    explanation: 'SELECT 절의 스칼라 서브쿼리는 반드시 단일 값(1행 1열)을 반환해야 합니다. 여기서는 외부 쿼리의 department_id를 참조하여 해당 부서명을 가져옵니다.',
     relatedConceptTags: ['select'],
-    planText: `---------------------------------------------------
-| Id | Operation           | Name      | Rows |
----------------------------------------------------
-|  0 | SELECT STATEMENT    |           |   10 |
-|  1 |  FILTER             |           |      |
-|  2 |   TABLE ACCESS FULL | CUSTOMERS |  200 |
-|  3 |   TABLE ACCESS FULL | ORDERS    | 1000 |
----------------------------------------------------
-Predicate Information:
-  1 - filter(EXISTS (SELECT 1 FROM ORDERS O
-              WHERE O.CUSTOMER_ID = C.CUSTOMER_ID
-                AND O.AMOUNT > 50000))`,
-    choices: [
-      'SELECT STATEMENT',
-      'FILTER',
-      'TABLE ACCESS FULL (CUSTOMERS)',
-      'TABLE ACCESS FULL (ORDERS)',
+    sqlTemplate: "SELECT e.name, (___ d.dept_name FROM departments d ___ d.id = e.department_id) AS dept_name FROM employees e;",
+    blanks: 2,
+    options: ['SELECT', 'WHERE', 'FROM', 'HAVING', 'IN', 'ON'],
+    optionExplanations: [
+      { value: 'SELECT', explanation: '스칼라 서브쿼리 내에서 반환할 컬럼을 지정하는 키워드입니다' },
+      { value: 'WHERE', explanation: '서브쿼리 내에서 외부 쿼리와의 연결 조건을 지정합니다' },
+      { value: 'FROM', explanation: '테이블을 지정하는 키워드이지만, 서브쿼리 내에서 이미 FROM이 사용되었습니다' },
+      { value: 'HAVING', explanation: 'GROUP BY 이후 그룹 조건에 사용됩니다. 여기서는 단순 조건 필터링이 필요합니다' },
+      { value: 'IN', explanation: '다중 값 비교에 사용됩니다. 여기서는 단일 행 비교(=)가 필요합니다' },
+      { value: 'ON', explanation: 'JOIN 절에서 조인 조건을 지정할 때 사용됩니다. 서브쿼리 내부에서는 WHERE를 사용합니다' },
     ],
-    choiceExplanations: [
-      { value: 'SELECT STATEMENT', explanation: '쿼리 전체의 루트 오퍼레이션입니다. 상관 서브쿼리 반복 실행과는 직접 관계가 없습니다.' },
-      { value: 'FILTER', explanation: '상관 서브쿼리(EXISTS 등)를 각 외부 행마다 반복 평가하는 오퍼레이션입니다. Predicate Information에서 상관 조건을 확인할 수 있습니다.' },
-      { value: 'TABLE ACCESS FULL (CUSTOMERS)', explanation: '외부 쿼리의 전체 테이블 스캔입니다. 상관 서브쿼리가 아닌 메인 쿼리의 데이터 접근입니다.' },
-      { value: 'TABLE ACCESS FULL (ORDERS)', explanation: 'FILTER 안에서 반복 호출되는 내부 테이블 스캔이지만, 반복 실행 자체를 나타내는 오퍼레이션은 FILTER입니다.' },
-    ],
-    correctAnswer: 'FILTER',
+    correctAnswers: ['SELECT', 'WHERE'],
     hints: {
-      directional: ['Predicate Information을 보면 EXISTS 절이 어떤 Id에 연결되어 있는지 확인하세요.'],
-      constraint: ['상관 서브쿼리는 외부 쿼리의 각 행(CUSTOMERS)마다 내부 쿼리(ORDERS)를 다시 실행합니다.'],
-      misconception: ['TABLE ACCESS FULL은 데이터를 읽는 방식이며, 반복 실행 제어는 FILTER가 담당합니다.'],
+      directional: ['스칼라 서브쿼리도 완전한 SELECT 문입니다. SELECT ... FROM ... WHERE 구조를 갖춥니다'],
+      constraint: ['외부 쿼리의 e.department_id와 내부의 d.id를 연결하는 조건절이 필요합니다'],
+      misconception: ['ON은 JOIN 구문에서만 사용됩니다. 서브쿼리 내 조건은 WHERE로 작성합니다'],
     },
-  } as PlanProblem,
+  } as FillProblem,
 
-  // ssp02 - basic / 구독 / HASH JOIN SEMI (IN 서브쿼리)
+  // ssf32 - intermediate / ANY 서브쿼리 빈칸 채우기
   {
-    id: 'ssp02',
-    category: 'sql-subquery',
-    difficulty: 'basic',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'IN 서브쿼리 최적화 실행 계획 (HASH JOIN SEMI)',
-    question: '아래 실행 계획은 구독 서비스 DB에서 IN 서브쿼리를 포함한 SQL을 실행한 결과입니다. 옵티마이저가 IN 서브쿼리를 어떤 방식으로 최적화했는지 나타내는 오퍼레이션을 고르세요.',
-    learningPoint: '옵티마이저는 IN 서브쿼리를 FILTER 대신 HASH JOIN SEMI로 변환하여 한 번의 해시 조인으로 효율적으로 처리할 수 있다',
-    tags: ['실행 계획', 'HASH JOIN SEMI', 'IN 서브쿼리'],
-    explanation: 'HASH JOIN SEMI는 IN 서브쿼리를 세미 조인으로 변환하여 처리하는 오퍼레이션입니다. 서브쿼리 결과를 해시 테이블로 만든 뒤 외부 쿼리와 한 번만 조인하므로, 행마다 반복 실행하는 FILTER보다 대용량에서 훨씬 빠릅니다.',
-    relatedConceptTags: ['select'],
-    planText: `------------------------------------------------------
-| Id | Operation             | Name       | Rows |
-------------------------------------------------------
-|  0 | SELECT STATEMENT      |            |   50 |
-|  1 |  HASH JOIN SEMI       |            |   50 |
-|  2 |   TABLE ACCESS FULL   | USERS      |  500 |
-|  3 |   TABLE ACCESS FULL   | SUBSCRIPTIONS | 300 |
-------------------------------------------------------
-Predicate Information:
-  1 - access(U.USER_ID = S.USER_ID)`,
-    choices: [
-      'SELECT STATEMENT',
-      'HASH JOIN SEMI',
-      'TABLE ACCESS FULL (USERS)',
-      'TABLE ACCESS FULL (SUBSCRIPTIONS)',
-    ],
-    choiceExplanations: [
-      { value: 'SELECT STATEMENT', explanation: '쿼리 전체의 루트 노드입니다. IN 서브쿼리 최적화와는 관계가 없습니다.' },
-      { value: 'HASH JOIN SEMI', explanation: 'IN 서브쿼리를 세미 조인으로 변환한 오퍼레이션입니다. SUBSCRIPTIONS를 해시 테이블로 빌드한 뒤 USERS와 한 번 조인하므로 FILTER 반복 실행보다 효율적입니다.' },
-      { value: 'TABLE ACCESS FULL (USERS)', explanation: '외부 쿼리의 전체 테이블 스캔으로, 조인의 프로브(probe) 입력입니다. IN 최적화 자체를 나타내지는 않습니다.' },
-      { value: 'TABLE ACCESS FULL (SUBSCRIPTIONS)', explanation: '서브쿼리 대상 테이블의 전체 스캔으로, 해시 테이블 빌드에 사용됩니다. 오퍼레이션 자체가 아닌 데이터 접근 방식입니다.' },
-    ],
-    correctAnswer: 'HASH JOIN SEMI',
-    hints: {
-      directional: ['SEMI가 붙은 오퍼레이션은 한쪽 테이블에서 매칭되는 첫 번째 행만 찾으면 즉시 TRUE를 반환하는 세미 조인 방식입니다.'],
-      constraint: ['IN 서브쿼리를 FILTER로 처리하면 외부 행마다 내부 스캔을 반복합니다. 옵티마이저는 이를 HASH JOIN SEMI로 변환하여 단일 조인으로 처리합니다.'],
-      misconception: ['TABLE ACCESS FULL은 데이터 접근 방법이고, IN 서브쿼리의 최적화 전략은 JOIN 계열 오퍼레이션으로 표현됩니다.'],
-    },
-  } as PlanProblem,
-
-  // ssp03 - intermediate / 게임 / NESTED LOOPS SEMI (EXISTS)
-  {
-    id: 'ssp03',
+    id: 'ssf32',
     category: 'sql-subquery',
     difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'EXISTS 서브쿼리 실행 계획 (NESTED LOOPS SEMI)',
-    question: '아래 실행 계획은 게임 서비스 DB에서 EXISTS 서브쿼리를 포함한 SQL의 실행 결과입니다. 어떤 Id의 오퍼레이션이 EXISTS 세미 조인을 처리하고 있으며, 이 방식의 특징으로 올바른 것을 고르세요.',
-    learningPoint: 'NESTED LOOPS SEMI는 EXISTS 서브쿼리를 처리할 때 사용되며, 내부 테이블에서 매칭 행을 하나 찾으면 즉시 다음 외부 행으로 넘어간다',
-    tags: ['실행 계획', 'NESTED LOOPS SEMI', 'EXISTS'],
-    explanation: 'NESTED LOOPS SEMI(Id=1)는 PLAYERS(Id=2)의 각 행에 대해 MATCH_LOGS(Id=3)에서 조건을 만족하는 첫 번째 행을 발견하는 순간 TRUE를 반환하고 다음 외부 행으로 넘어갑니다. 이는 PLAYERS가 소규모이고 MATCH_LOGS에 적절한 인덱스가 있을 때 효율적입니다.',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'ANY 연산자 서브쿼리',
+    question: '아래 SQL의 빈칸을 채워 IT 부서의 어떤 직원보다 급여가 높은 직원을 조회하세요.',
+    learningPoint: 'ANY는 서브쿼리 결과 중 하나라도 조건을 만족하면 TRUE를 반환한다 (= 최솟값보다 크면 TRUE)',
+    tags: ['서브쿼리', 'ANY', '다중행'],
+    explanation: '> ANY(서브쿼리)는 서브쿼리 결과 중 최솟값보다 크면 TRUE입니다. IT 부서 급여가 3000, 4000, 5000이면 salary > 3000인 직원이 모두 선택됩니다.',
     relatedConceptTags: ['select'],
-    planText: `------------------------------------------------------------
-| Id | Operation                    | Name       | Rows |
-------------------------------------------------------------
-|  0 | SELECT STATEMENT             |            |   30 |
-|  1 |  NESTED LOOPS SEMI           |            |   30 |
-|  2 |   TABLE ACCESS FULL          | PLAYERS    |  300 |
-|  3 |   INDEX RANGE SCAN           | IDX_ML_UID |    5 |
-------------------------------------------------------------
-Predicate Information:
-  1 - access(P.PLAYER_ID = ML.PLAYER_ID)
-  3 - access(ML.PLAYER_ID = P.PLAYER_ID)
-      filter(ML.PLAYED_AT >= SYSDATE - 7)`,
-    choices: [
-      'NESTED LOOPS SEMI는 매칭 행을 모두 찾은 뒤 중복을 제거한다',
-      'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다',
-      'NESTED LOOPS SEMI는 두 테이블을 해시로 변환하여 한 번에 조인한다',
-      'NESTED LOOPS SEMI는 외부 쿼리의 각 행을 내부 서브쿼리 없이 단독으로 처리한다',
+    sqlTemplate: "SELECT name, salary FROM employees WHERE salary > ___(SELECT salary FROM employees WHERE department = ___);",
+    blanks: 2,
+    options: ['ANY', 'ALL', 'IN', 'EXISTS', "'IT'", "'HR'"],
+    optionExplanations: [
+      { value: 'ANY', explanation: '서브쿼리 결과 중 하나라도 만족하면 TRUE. > ANY는 최솟값보다 큰 경우입니다' },
+      { value: 'ALL', explanation: '서브쿼리 결과 모두를 만족해야 TRUE. > ALL은 최댓값보다 큰 경우입니다' },
+      { value: 'IN', explanation: '서브쿼리 결과 목록에 포함되는지 확인합니다. 비교 연산자(>)와 함께 사용할 수 없습니다' },
+      { value: 'EXISTS', explanation: '서브쿼리 결과 존재 여부만 확인합니다. 값 비교가 아닌 존재 체크입니다' },
+      { value: "'IT'", explanation: 'IT 부서를 필터링하는 문자열 값입니다' },
+      { value: "'HR'", explanation: 'HR 부서를 필터링하는 문자열 값입니다. 문제 조건은 IT 부서입니다' },
     ],
-    choiceExplanations: [
-      { value: 'NESTED LOOPS SEMI는 매칭 행을 모두 찾은 뒤 중복을 제거한다', explanation: '틀렸습니다. 모든 매칭 행을 찾는 것은 일반 NESTED LOOPS JOIN입니다. SEMI는 첫 번째 매칭 행 발견 즉시 중단합니다.' },
-      { value: 'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다', explanation: '정확합니다. SEMI 조인은 존재 여부만 확인하므로 첫 번째 매칭 행을 찾는 순간 내부 스캔을 중단하고 다음 외부 행으로 진행합니다.' },
-      { value: 'NESTED LOOPS SEMI는 두 테이블을 해시로 변환하여 한 번에 조인한다', explanation: '틀렸습니다. 해시 방식은 HASH JOIN SEMI입니다. NESTED LOOPS는 중첩 반복 방식으로 동작합니다.' },
-      { value: 'NESTED LOOPS SEMI는 외부 쿼리의 각 행을 내부 서브쿼리 없이 단독으로 처리한다', explanation: '틀렸습니다. NESTED LOOPS SEMI도 외부 행마다 내부 인덱스/테이블 접근이 발생합니다.' },
-    ],
-    correctAnswer: 'NESTED LOOPS SEMI는 내부 테이블에서 첫 번째 매칭 행을 찾으면 즉시 다음 외부 행으로 넘어간다',
+    correctAnswers: ['ANY', "'IT'"],
     hints: {
-      directional: ['SEMI 조인은 "존재 여부"만 확인합니다. 매칭 행을 전부 찾을 필요가 없습니다.'],
-      constraint: ['Predicate Information의 filter 조건은 인덱스 스캔(Id=3) 이후 추가로 적용됩니다.'],
-      misconception: ['NESTED LOOPS와 HASH JOIN은 서로 다른 조인 방식입니다. LOOPS는 중첩 반복, HASH는 해시 테이블 빌드 후 프로브 방식입니다.'],
+      directional: ['비교 연산자(>)와 함께 사용할 수 있는 다중행 서브쿼리 연산자를 고르세요'],
+      constraint: ['ANY는 "하나라도", ALL은 "모두"라는 의미입니다. 문제는 "어떤 직원보다"이므로 하나라도에 해당합니다'],
+      misconception: ['IN은 = 비교만 가능합니다. >, < 같은 비교 연산자와 함께 쓰려면 ANY 또는 ALL을 사용해야 합니다'],
     },
-  } as PlanProblem,
+  } as FillProblem,
 
-  // ssp04 - intermediate / 배달 / NESTED LOOPS ANTI (NOT EXISTS)
+  // ssf33 - advanced / FROM절 인라인 뷰 빈칸 채우기
   {
-    id: 'ssp04',
-    category: 'sql-subquery',
-    difficulty: 'intermediate',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: 'NOT EXISTS 실행 계획 (NESTED LOOPS ANTI)',
-    question: '아래 실행 계획은 배달 서비스 DB에서 NOT EXISTS 서브쿼리를 실행한 결과입니다. NESTED LOOPS ANTI의 동작 방식으로 올바른 것을 고르세요.',
-    learningPoint: 'NESTED LOOPS ANTI는 NOT EXISTS 처리에 사용되며, 내부에서 매칭 행을 하나라도 찾으면 해당 외부 행을 결과에서 제외한다',
-    tags: ['실행 계획', 'NESTED LOOPS ANTI', 'NOT EXISTS'],
-    explanation: 'NESTED LOOPS ANTI는 NOT EXISTS 서브쿼리를 Anti 세미 조인으로 처리합니다. RESTAURANTS(Id=2)의 각 행에 대해 REVIEWS(Id=3)에서 매칭 행을 하나라도 찾으면 그 음식점은 결과에서 제외됩니다. 매칭이 없는 행만 최종 결과에 포함됩니다.',
-    relatedConceptTags: ['select'],
-    planText: `--------------------------------------------------------------
-| Id | Operation                    | Name         | Rows |
---------------------------------------------------------------
-|  0 | SELECT STATEMENT             |              |   15 |
-|  1 |  NESTED LOOPS ANTI           |              |   15 |
-|  2 |   TABLE ACCESS FULL          | RESTAURANTS  |  150 |
-|  3 |   INDEX RANGE SCAN           | IDX_REV_RID  |    3 |
---------------------------------------------------------------
-Predicate Information:
-  1 - access(R.RESTAURANT_ID = RV.RESTAURANT_ID)
-  3 - access(RV.RESTAURANT_ID = R.RESTAURANT_ID)`,
-    choices: [
-      'NESTED LOOPS ANTI는 두 테이블을 전부 조인한 뒤 중복 행을 제거한다',
-      'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다',
-      'NESTED LOOPS ANTI는 내부 테이블 전체를 스캔하여 매칭 수를 집계한 뒤 0인 행만 반환한다',
-      'NESTED LOOPS ANTI는 해시 테이블을 사용하여 매칭 여부를 O(1)로 확인한다',
-    ],
-    choiceExplanations: [
-      { value: 'NESTED LOOPS ANTI는 두 테이블을 전부 조인한 뒤 중복 행을 제거한다', explanation: '틀렸습니다. ANTI 조인은 전체 조인을 하지 않습니다. 매칭 행을 하나라도 발견하면 즉시 해당 외부 행을 제외합니다.' },
-      { value: 'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다', explanation: '정확합니다. ANTI 조인은 내부에서 매칭이 발견되면 해당 외부 행을 건너뛰고, 매칭이 없는 외부 행만 결과에 포함합니다.' },
-      { value: 'NESTED LOOPS ANTI는 내부 테이블 전체를 스캔하여 매칭 수를 집계한 뒤 0인 행만 반환한다', explanation: '틀렸습니다. 매칭 수를 집계하지 않습니다. 첫 번째 매칭 행을 발견하는 즉시 해당 외부 행을 제외합니다.' },
-      { value: 'NESTED LOOPS ANTI는 해시 테이블을 사용하여 매칭 여부를 O(1)로 확인한다', explanation: '틀렸습니다. 해시 테이블 방식은 HASH JOIN ANTI입니다. NESTED LOOPS는 인덱스 또는 전체 스캔으로 매칭을 확인합니다.' },
-    ],
-    correctAnswer: 'NESTED LOOPS ANTI는 내부에서 매칭 행을 찾으면 해당 외부 행을 결과에서 제외한다',
-    hints: {
-      directional: ['ANTI 조인은 SEMI 조인의 반대입니다. SEMI는 매칭이 있으면 포함, ANTI는 매칭이 있으면 제외합니다.'],
-      constraint: ['실행 계획의 Id=3은 인덱스 스캔(INDEX RANGE SCAN)으로, 매칭 여부를 빠르게 확인합니다.'],
-      misconception: ['NOT IN과 NOT EXISTS는 동일한 실행 계획을 갖지 않을 수 있습니다. NULL 포함 여부에 따라 결과도 달라집니다.'],
-    },
-  } as PlanProblem,
-
-  // ssp05 - advanced / 광고 / VIEW (inline view)
-  {
-    id: 'ssp05',
+    id: 'ssf33',
     category: 'sql-subquery',
     difficulty: 'advanced',
-    type: 'plan',
-    availableModes: ['write', 'fill'] as const,
-    title: '인라인 뷰 실행 계획 분석 (VIEW)',
-    question: '아래 실행 계획은 광고 서비스 DB에서 인라인 뷰(FROM 절 서브쿼리)를 사용한 SQL의 실행 결과입니다. 실행 계획에 대한 설명으로 올바른 것을 고르세요.',
-    learningPoint: '인라인 뷰는 실행 계획에서 VIEW 오퍼레이션으로 나타나며, 옵티마이저는 경우에 따라 VIEW를 머지(merge)하거나 서브쿼리를 그대로 유지한다',
-    tags: ['실행 계획', 'VIEW', '인라인 뷰'],
-    explanation: 'Id=1의 VIEW 오퍼레이션은 FROM 절의 인라인 뷰가 그대로 유지된 것을 의미합니다. 옵티마이저가 뷰 머지(view merge)를 적용하지 않은 경우, 내부 서브쿼리(AD_LOGS 집계)를 먼저 완전히 실행하여 임시 집합을 만든 뒤 외부 쿼리가 그 결과를 사용합니다. 이는 집계 후 필터링이 필요할 때 뷰 머지보다 유리할 수 있습니다.',
-    relatedConceptTags: ['select'],
-    planText: `------------------------------------------------------------------
-| Id | Operation              | Name        | Rows | Cost |
-------------------------------------------------------------------
-|  0 | SELECT STATEMENT       |             |   20 |  120 |
-|  1 |  HASH JOIN             |             |   20 |  120 |
-|  2 |   VIEW                 |             |   80 |   90 |
-|  3 |    HASH GROUP BY       |             |   80 |   90 |
-|  4 |     TABLE ACCESS FULL  | AD_LOGS     | 5000 |   40 |
-|  5 |   TABLE ACCESS FULL    | CAMPAIGNS   |  100 |   10 |
-------------------------------------------------------------------
-Predicate Information:
-  1 - access(C.AD_ID = V.AD_ID)
-  2 - filter(V.TOTAL_IMPRESSIONS > 1000)`,
-    choices: [
-      'VIEW(Id=1)는 실제 데이터베이스에 저장된 뷰 객체를 조회하는 오퍼레이션이다',
-      'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다',
-      'VIEW(Id=2)의 filter 조건은 AD_LOGS 스캔(Id=4) 이전에 먼저 평가되어 불필요한 행을 제거한다',
-      'HASH JOIN(Id=1)은 CAMPAIGNS를 해시 테이블로 빌드한 뒤 AD_LOGS를 프로브로 사용한다',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'FROM절 인라인 뷰(서브쿼리)',
+    question: '아래 SQL의 빈칸을 채워 부서별 평균 급여가 전체 평균보다 높은 부서를 조회하세요. FROM절 서브쿼리(인라인 뷰)를 사용합니다.',
+    learningPoint: 'FROM절 서브쿼리(인라인 뷰)는 임시 테이블처럼 사용되며, 반드시 별칭(alias)이 필요하다',
+    tags: ['서브쿼리', '인라인 뷰', 'FROM절'],
+    explanation: 'FROM절 서브쿼리는 결과 집합을 가상의 테이블로 만들어 외부 쿼리에서 참조합니다. 여기서는 부서별 평균 급여를 먼저 계산한 뒤, WHERE절에서 전체 평균과 비교합니다.',
+    relatedConceptTags: ['select', 'group-by'],
+    sqlTemplate: "SELECT dept_avg.department_id, dept_avg.avg_sal FROM (SELECT department_id, AVG(salary) AS avg_sal FROM employees ___ BY department_id) ___ dept_avg WHERE dept_avg.avg_sal > (SELECT AVG(salary) FROM employees);",
+    blanks: 2,
+    options: ['GROUP', 'ORDER', 'AS', 'ON', 'PARTITION', 'HAVING'],
+    optionExplanations: [
+      { value: 'GROUP', explanation: 'GROUP BY는 집계 함수(AVG)와 함께 그룹화할 때 사용합니다' },
+      { value: 'ORDER', explanation: 'ORDER BY는 정렬에 사용됩니다. 집계에는 GROUP BY가 필요합니다' },
+      { value: 'AS', explanation: '인라인 뷰의 별칭(alias)을 지정하는 키워드입니다' },
+      { value: 'ON', explanation: 'JOIN 조건에 사용됩니다. 인라인 뷰 별칭 지정에는 AS를 사용합니다' },
+      { value: 'PARTITION', explanation: 'PARTITION BY는 윈도우 함수에서 사용됩니다. 일반 집계에는 GROUP BY입니다' },
+      { value: 'HAVING', explanation: 'GROUP BY 이후 그룹 필터링에 사용됩니다. 여기서는 GROUP 키워드가 먼저 필요합니다' },
     ],
-    choiceExplanations: [
-      { value: 'VIEW(Id=1)는 실제 데이터베이스에 저장된 뷰 객체를 조회하는 오퍼레이션이다', explanation: '틀렸습니다. 실행 계획의 VIEW 오퍼레이션은 FROM 절의 인라인 뷰(서브쿼리)가 머지되지 않고 별도 처리됨을 나타냅니다. 저장된 뷰와는 다릅니다.' },
-      { value: 'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다', explanation: '정확합니다. 실행 순서는 Id=4(스캔) → Id=3(집계) → Id=2(VIEW 필터 적용) → Id=1(외부 조인) 순입니다. TOTAL_IMPRESSIONS > 1000 필터는 집계가 완료된 후 VIEW 단계에서 적용됩니다.' },
-      { value: 'VIEW(Id=2)의 filter 조건은 AD_LOGS 스캔(Id=4) 이전에 먼저 평가되어 불필요한 행을 제거한다', explanation: '틀렸습니다. TOTAL_IMPRESSIONS는 집계 후에 계산되는 값입니다. 스캔 이전에는 이 값이 없으므로 Ad 스캔 전에 필터를 적용할 수 없습니다.' },
-      { value: 'HASH JOIN(Id=1)은 CAMPAIGNS를 해시 테이블로 빌드한 뒤 AD_LOGS를 프로브로 사용한다', explanation: '틀렸습니다. 실행 계획을 보면 VIEW(Id=2) 결과가 먼저 처리되고 CAMPAIGNS(Id=5)가 뒤에 나옵니다. 일반적으로 해시 빌드는 더 작은 쪽(CAMPAIGNS)이지만, 프로브 입력은 VIEW 결과입니다.' },
-    ],
-    correctAnswer: 'HASH GROUP BY(Id=3)는 AD_LOGS를 먼저 집계하여 VIEW(Id=2)의 입력 데이터를 생성하며, 필터는 집계 후 VIEW 단계에서 적용된다',
+    correctAnswers: ['GROUP', 'AS'],
     hints: {
-      directional: ['실행 계획의 Id는 트리 구조이므로 실제 실행 순서는 가장 안쪽(높은 Id, 들여쓰기 깊은) 오퍼레이션부터 시작합니다.'],
-      constraint: ['TOTAL_IMPRESSIONS는 GROUP BY 집계 결과 컬럼입니다. 이 값이 생성되기 전에는 필터를 적용할 수 없습니다.'],
-      misconception: ['실행 계획의 VIEW는 CREATE VIEW로 만든 뷰가 아니라, FROM 절 인라인 뷰(서브쿼리)가 머지되지 않았음을 의미합니다.'],
+      directional: ['AVG(salary)를 department_id별로 계산하려면 어떤 절로 그룹화해야 할까요?'],
+      constraint: ['FROM절 서브쿼리는 반드시 별칭이 있어야 합니다. 별칭을 지정하는 키워드를 고르세요'],
+      misconception: ['ORDER BY는 정렬만 합니다. 집계 함수를 그룹별로 적용하려면 GROUP BY가 필요합니다'],
     },
-  } as PlanProblem,
+  } as FillProblem,
+
+  // sso16 - basic / EXISTS와 IN 차이
+  {
+    id: 'sso16',
+    category: 'sql-subquery',
+    difficulty: 'basic',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'EXISTS는 서브쿼리의 SELECT 목록을 확인한다?',
+    question: 'EXISTS 서브쿼리에서 SELECT 절에 어떤 컬럼을 지정하는지가 결과에 영향을 미치는지 판단하세요.',
+    learningPoint: 'EXISTS는 서브쿼리의 결과 행이 존재하는지만 확인하며, SELECT 절의 컬럼 목록은 결과에 영향을 주지 않는다',
+    tags: ['서브쿼리', 'EXISTS'],
+    explanation: 'EXISTS는 서브쿼리가 한 행이라도 반환하는지만 확인합니다. SELECT 1, SELECT *, SELECT column_name 모두 동일한 결과를 반환합니다. EXISTS는 값이 아닌 행의 존재 여부만 평가하기 때문입니다.',
+    relatedConceptTags: ['select'],
+    statement: 'EXISTS (SELECT * FROM orders WHERE ...) 와 EXISTS (SELECT 1 FROM orders WHERE ...) 는 동일한 결과를 반환한다.',
+    answer: 'O' as const,
+    hints: {
+      directional: ['EXISTS는 서브쿼리의 "값"을 보는 것이 아니라 "행의 존재"를 확인합니다'],
+      misconception: ['SELECT *이 SELECT 1보다 느릴 것이라 생각할 수 있지만, 대부분의 옵티마이저는 EXISTS 내부 SELECT 목록을 무시합니다'],
+    },
+  } as OxProblem,
+
+  // sso17 - advanced / ALL 연산자
+  {
+    id: 'sso17',
+    category: 'sql-subquery',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: '> ALL과 > MAX의 동치 관계',
+    question: '> ALL 서브쿼리와 > (SELECT MAX(...)) 서브쿼리의 결과 차이를 판단하세요.',
+    learningPoint: '> ALL(서브쿼리)는 서브쿼리 결과의 모든 값보다 커야 하므로 > MAX(...)와 동일한 결과를 반환한다 (단, NULL이 없을 때)',
+    tags: ['서브쿼리', 'ALL', '다중행'],
+    explanation: 'salary > ALL(SELECT salary FROM ...) 는 서브쿼리 결과의 모든 값보다 커야 하므로, 결국 최댓값보다 큰 경우와 같습니다. 단, 서브쿼리 결과에 NULL이 포함되면 > ALL은 항상 FALSE가 되지만 MAX()는 NULL을 무시하므로 결과가 달라질 수 있습니다.',
+    relatedConceptTags: ['select'],
+    statement: '서브쿼리 결과에 NULL이 없다면, WHERE salary > ALL(SELECT salary FROM dept_a)는 WHERE salary > (SELECT MAX(salary) FROM dept_a)와 동일한 결과를 반환한다.',
+    answer: 'O' as const,
+    hints: {
+      directional: ['> ALL은 "모든 값보다 크다"는 의미입니다. 모든 값보다 크려면 최댓값보다 커야 합니다'],
+      misconception: ['NULL이 포함된 경우 비교 연산 결과가 UNKNOWN이 되어 > ALL은 항상 FALSE가 됩니다. 하지만 문제 조건은 NULL이 없는 경우입니다'],
+    },
+  } as OxProblem,
 
   // sso02 - basic / IN vs = 구분
   {

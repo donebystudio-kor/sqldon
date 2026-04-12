@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
 
 export const SQL_BASIC_PROBLEMS = [
   // ===== EXISTING =====
@@ -786,117 +786,105 @@ export const SQL_BASIC_PROBLEMS = [
     relatedConceptTags: ['select'],
   } as OxProblem,
 
-  // ===== PLAN PROBLEMS (sbp01~sbp05) =====
+  // ===== FILL PROBLEMS (sbf31~sbf33) =====
   {
-    id: 'sbp01', category: 'sql-basic', difficulty: 'basic', type: 'plan',
-    title: '전체 구독자 조회의 병목',
-    question: '아래 실행계획에서 가장 큰 병목이 되는 단계는?',
-    planText: `--------------------------------------------------------------
-| Id  | Operation          | Name           | Rows  | Cost  |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT   |                | 50000 |   320 |
-|*  1 |  TABLE ACCESS FULL | SUBSCRIPTIONS  | 50000 |   320 |
---------------------------------------------------------------`,
-    choices: ['SELECT STATEMENT', 'TABLE ACCESS FULL'],
-    choiceExplanations: [
-      { value: 'SELECT STATEMENT', explanation: '최상위 노드로 실제 작업을 수행하지 않습니다' },
-      { value: 'TABLE ACCESS FULL', explanation: '5만 행을 전부 스캔합니다. 조건 없이 전체 조회 시 발생' },
+    id: 'sbf31', category: 'sql-basic', difficulty: 'basic', type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'LIKE 패턴 매칭으로 검색',
+    question: '고객 테이블에서 이름이 "김"으로 시작하는 고객을 조회하세요.',
+    learningPoint: 'LIKE 연산자와 % 와일드카드를 사용한 패턴 매칭',
+    tags: ['SELECT', 'WHERE', 'LIKE'],
+    explanation: "LIKE 연산자는 문자열 패턴 매칭에 사용됩니다. %는 0개 이상의 임의 문자를 의미합니다. '김%'은 '김'으로 시작하는 모든 문자열에 매칭됩니다.",
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT name, phone FROM customers WHERE name ___ '김___';",
+    blanks: 2,
+    options: ['LIKE', '=', 'IN', '%', '_', 'BETWEEN', 'IS'],
+    optionExplanations: [
+      { value: 'LIKE', explanation: '문자열 패턴 매칭에 사용하는 연산자입니다' },
+      { value: '=', explanation: '정확히 일치하는 값만 비교합니다. 패턴 매칭 불가' },
+      { value: 'IN', explanation: '여러 값 목록 중 하나와 일치하는지 비교합니다' },
+      { value: '%', explanation: '0개 이상의 임의 문자를 의미하는 와일드카드입니다' },
+      { value: '_', explanation: '정확히 1개의 임의 문자를 의미하는 와일드카드입니다' },
+      { value: 'BETWEEN', explanation: '범위 조건에 사용합니다' },
+      { value: 'IS', explanation: 'NULL 비교에 사용합니다' },
     ],
-    correctAnswer: 'TABLE ACCESS FULL',
-    hints: { directional: ['FULL이라는 키워드에 주목하세요'], constraint: ['비용(Cost)이 가장 높은 실제 작업 단계를 찾으세요'], misconception: ['SELECT STATEMENT는 최상위 요약 노드일 뿐입니다'] },
-    learningPoint: 'TABLE ACCESS FULL은 테이블 전체를 읽는 방식으로 대용량에서 병목',
-    tags: ['실행계획', 'Full Table Scan'], explanation: 'TABLE ACCESS FULL은 조건 없이 전체 테이블을 읽습니다. 인덱스가 없거나 필터 조건이 없을 때 발생합니다.',
-    relatedConceptTags: ['full-table-scan'],
-  } as PlanProblem,
+    correctAnswers: ['LIKE', '%'],
+    hints: { directional: ['문자열 패턴을 비교하는 연산자를 떠올려보세요'], constraint: ['"김"으로 시작하고 뒤에 어떤 문자든 올 수 있어야 합니다'], misconception: ['= 연산자는 정확한 값만 비교하므로 패턴 매칭에 사용할 수 없습니다'] } as const,
+  } as FillProblem,
   {
-    id: 'sbp02', category: 'sql-basic', difficulty: 'basic', type: 'plan',
-    title: '정렬 작업의 비용',
-    question: '아래 실행계획에서 추가 비용이 발생하는 단계는?',
-    planText: `--------------------------------------------------------------
-| Id  | Operation          | Name    | Rows  | Cost (%CPU)   |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT   |         |  5000 |   180  (5)    |
-|   1 |  SORT ORDER BY     |         |  5000 |   180  (5)    |
-|*  2 |   TABLE ACCESS FULL| ORDERS  |  5000 |   150  (2)    |
---------------------------------------------------------------`,
-    choices: ['SELECT STATEMENT', 'SORT ORDER BY', 'TABLE ACCESS FULL'],
-    choiceExplanations: [
-      { value: 'SELECT STATEMENT', explanation: '최상위 요약 노드입니다' },
-      { value: 'SORT ORDER BY', explanation: 'ORDER BY에 의한 정렬 작업입니다. 추가 CPU와 메모리를 사용합니다' },
-      { value: 'TABLE ACCESS FULL', explanation: '전체 테이블 스캔이지만, 이미 Cost 150으로 포함되어 있습니다' },
+    id: 'sbf32', category: 'sql-basic', difficulty: 'basic', type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'BETWEEN으로 범위 조회',
+    question: '주문 테이블에서 금액이 10000 이상 50000 이하인 주문을 조회하세요.',
+    learningPoint: 'BETWEEN 연산자를 사용한 범위 조건 필터링',
+    tags: ['SELECT', 'WHERE', 'BETWEEN'],
+    explanation: 'BETWEEN A AND B는 A 이상 B 이하의 범위를 의미합니다. >= A AND <= B와 동일한 결과를 반환합니다.',
+    relatedConceptTags: ['select'],
+    sqlTemplate: 'SELECT order_id, amount FROM orders WHERE amount ___ 10000 ___ 50000;',
+    blanks: 2,
+    options: ['BETWEEN', 'AND', 'OR', 'IN', 'LIKE', '>=', 'TO'],
+    optionExplanations: [
+      { value: 'BETWEEN', explanation: '시작값과 끝값 사이의 범위를 지정합니다' },
+      { value: 'AND', explanation: 'BETWEEN과 함께 사용하여 범위의 끝값을 지정합니다' },
+      { value: 'OR', explanation: '두 조건 중 하나만 만족해도 되는 논리 연산자입니다' },
+      { value: 'IN', explanation: '특정 값 목록에 포함되는지 확인합니다' },
+      { value: 'LIKE', explanation: '문자열 패턴 매칭에 사용합니다' },
+      { value: '>=', explanation: '이상 비교 연산자이지만 BETWEEN을 사용하면 더 간결합니다' },
+      { value: 'TO', explanation: 'SQL에서 범위 지정에 TO는 사용하지 않습니다' },
     ],
-    correctAnswer: 'SORT ORDER BY',
-    hints: { directional: ['SORT라는 키워드에 주목하세요'], constraint: ['Cost가 150에서 180으로 증가한 원인을 찾으세요'], misconception: ['Full Scan도 비용이 크지만, 추가 비용은 정렬에서 발생합니다'] },
-    learningPoint: 'SORT ORDER BY는 정렬 작업으로 추가 CPU/메모리 비용이 발생한다',
-    tags: ['실행계획', 'Sort'], explanation: 'ORDER BY는 결과를 정렬하기 위해 SORT 단계를 추가합니다. 데이터가 많으면 디스크 정렬이 발생할 수 있습니다.',
-    relatedConceptTags: ['full-table-scan'],
-  } as PlanProblem,
+    correctAnswers: ['BETWEEN', 'AND'],
+    hints: { directional: ['범위 조건을 간결하게 표현하는 키워드를 생각해보세요'], constraint: ['시작값과 끝값을 연결하는 키워드가 필요합니다'], misconception: ['BETWEEN은 시작값과 끝값을 모두 포함(이상/이하)합니다'] } as const,
+  } as FillProblem,
   {
-    id: 'sbp03', category: 'sql-basic', difficulty: 'basic', type: 'plan',
-    title: '인덱스 활용 여부 판단',
-    question: '아래 실행계획에서 인덱스를 사용하고 있는 단계는?',
-    planText: `--------------------------------------------------------------
-| Id  | Operation                    | Name        | Rows | Cost|
---------------------------------------------------------------
-|   0 | SELECT STATEMENT             |             |   10 |   4 |
-|   1 |  TABLE ACCESS BY INDEX ROWID | LOGIN_LOGS  |   10 |   4 |
-|*  2 |   INDEX RANGE SCAN           | IDX_USER    |   10 |   2 |
---------------------------------------------------------------`,
-    choices: ['SELECT STATEMENT', 'TABLE ACCESS BY INDEX ROWID', 'INDEX RANGE SCAN'],
-    choiceExplanations: [
-      { value: 'SELECT STATEMENT', explanation: '최상위 요약 노드입니다' },
-      { value: 'TABLE ACCESS BY INDEX ROWID', explanation: '인덱스에서 찾은 ROWID로 테이블 데이터를 읽습니다' },
-      { value: 'INDEX RANGE SCAN', explanation: '인덱스의 특정 범위를 스캔합니다. 인덱스를 직접 사용하는 단계' },
+    id: 'sbf33', category: 'sql-basic', difficulty: 'intermediate', type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'IN 연산자로 다중 값 조회',
+    question: "부서 테이블에서 부서명이 '영업', '마케팅', '기획' 중 하나인 부서를 조회하세요.",
+    learningPoint: 'IN 연산자를 사용하여 여러 값 중 하나와 매칭되는 행을 필터링하는 방법',
+    tags: ['SELECT', 'WHERE', 'IN'],
+    explanation: "IN 연산자는 지정된 값 목록 중 하나와 일치하는 행을 반환합니다. OR을 여러 번 쓰는 것보다 간결합니다.",
+    relatedConceptTags: ['select'],
+    sqlTemplate: "SELECT dept_id, dept_name FROM departments WHERE dept_name ___ ('영업', '마케팅', ___);",
+    blanks: 2,
+    options: ['IN', '=', 'LIKE', 'ANY', "'기획'", "'인사'", 'BETWEEN'],
+    optionExplanations: [
+      { value: 'IN', explanation: '값 목록 중 하나와 일치하는지 확인하는 연산자입니다' },
+      { value: '=', explanation: '하나의 값만 비교할 수 있습니다' },
+      { value: 'LIKE', explanation: '패턴 매칭에 사용하며, 목록 비교에는 적합하지 않습니다' },
+      { value: 'ANY', explanation: '서브쿼리와 함께 사용하는 키워드입니다' },
+      { value: "'기획'", explanation: '문제 조건에 맞는 세 번째 부서명입니다' },
+      { value: "'인사'", explanation: '문제 조건에 해당하지 않는 부서명입니다' },
+      { value: 'BETWEEN', explanation: '숫자나 날짜 범위에 사용하며, 값 목록 비교에는 적합하지 않습니다' },
     ],
-    correctAnswer: 'INDEX RANGE SCAN',
-    hints: { directional: ['INDEX라는 단어가 포함된 단계를 찾으세요'], constraint: ['실제 인덱스를 스캔하는 단계입니다'], misconception: ['TABLE ACCESS BY INDEX ROWID는 인덱스 결과로 테이블을 읽는 것이지, 인덱스 자체를 사용하는 단계는 아닙니다'] },
-    learningPoint: 'INDEX RANGE SCAN은 인덱스를 활용하여 효율적으로 데이터를 찾는 방식',
-    tags: ['실행계획', 'Index Range Scan'], explanation: 'INDEX RANGE SCAN은 인덱스에서 조건에 맞는 범위만 읽습니다. Full Table Scan보다 훨씬 효율적입니다.',
-    relatedConceptTags: ['full-table-scan'],
-  } as PlanProblem,
-  {
-    id: 'sbp04', category: 'sql-basic', difficulty: 'intermediate', type: 'plan',
-    title: 'COUNT 집계의 실행계획',
-    question: '아래 실행계획에서 전체 행을 세기 위해 어떤 방식이 사용되었나요?',
-    planText: `--------------------------------------------------------------
-| Id  | Operation          | Name          | Rows  | Cost    |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT   |               |     1 |   280   |
-|   1 |  SORT AGGREGATE    |               |     1 |         |
-|   2 |   TABLE ACCESS FULL| GAME_SESSIONS | 80000 |   280   |
---------------------------------------------------------------`,
-    choices: ['INDEX SCAN', 'TABLE ACCESS FULL', 'SORT AGGREGATE'],
-    choiceExplanations: [
-      { value: 'INDEX SCAN', explanation: '이 실행계획에 인덱스 스캔은 없습니다' },
-      { value: 'TABLE ACCESS FULL', explanation: '전체 테이블을 읽어 COUNT를 수행합니다. 8만 행을 모두 스캔' },
-      { value: 'SORT AGGREGATE', explanation: '집계 연산(COUNT)을 수행하는 단계이지만, 데이터를 읽는 방식은 아닙니다' },
-    ],
-    correctAnswer: 'TABLE ACCESS FULL',
-    hints: { directional: ['데이터를 어디서 읽는지 찾으세요'], constraint: ['8만 행을 모두 읽는 단계입니다'], misconception: ['SORT AGGREGATE는 집계를 계산하는 단계이지, 데이터를 가져오는 단계가 아닙니다'] },
-    learningPoint: 'COUNT(*)는 모든 행을 읽어야 하므로 Full Table Scan이 발생할 수 있다',
-    tags: ['실행계획', 'Full Table Scan', 'COUNT'], explanation: 'WHERE 조건 없이 COUNT(*)를 사용하면 전체 행을 스캔해야 합니다. 인덱스만으로는 정확한 행 수를 알 수 없기 때문입니다.',
-    relatedConceptTags: ['full-table-scan'],
-  } as PlanProblem,
-  {
-    id: 'sbp05', category: 'sql-basic', difficulty: 'intermediate', type: 'plan',
-    title: 'WHERE 조건의 효과',
-    question: '아래 두 실행계획 중 더 효율적인 것은?',
-    planText: `-- 쿼리 A (WHERE 조건 없음)
-| TABLE ACCESS FULL | DELIVERIES | 100000 | Cost: 500 |
+    correctAnswers: ['IN', "'기획'"],
+    hints: { directional: ['여러 값 중 하나와 일치하는지 확인하는 연산자를 생각해보세요'], constraint: ['문제 조건에서 세 번째 부서명이 무엇인지 확인하세요'], misconception: ['= 연산자는 하나의 값만 비교할 수 있으므로 여러 값을 비교하려면 IN을 사용합니다'] } as const,
+  } as FillProblem,
 
--- 쿼리 B (WHERE cancelled_at IS NOT NULL)
-| TABLE ACCESS FULL | DELIVERIES |   2000 | Cost: 500 |
-| * filter: cancelled_at IS NOT NULL`,
-    choices: ['쿼리 A', '쿼리 B', '둘 다 동일'],
-    choiceExplanations: [
-      { value: '쿼리 A', explanation: '10만 행 전체를 반환합니다' },
-      { value: '쿼리 B', explanation: '스캔 비용은 같지만 필터링 후 2000행만 반환하여 후속 처리가 가벼움' },
-      { value: '둘 다 동일', explanation: 'Full Scan 비용은 같지만 반환 행 수가 다릅니다' },
-    ],
-    correctAnswer: '쿼리 B',
-    hints: { directional: ['반환되는 행 수의 차이에 주목하세요'], constraint: ['스캔 비용은 같아도 결과 크기가 다릅니다'], misconception: ['Full Scan Cost가 같다고 성능이 동일한 것은 아닙니다. 반환 행 수도 중요'] },
-    learningPoint: 'WHERE 조건으로 결과 행을 줄이면 전체 처리 성능이 개선된다',
-    tags: ['실행계획', 'WHERE', 'Full Table Scan'], explanation: '두 쿼리 모두 Full Scan이지만, WHERE로 필터링하면 반환 행이 줄어 네트워크 전송, 클라이언트 처리 등이 가벼워집니다.',
-    relatedConceptTags: ['full-table-scan'],
-  } as PlanProblem,
+  // ===== OX PROBLEMS (sbo16~sbo17) =====
+  {
+    id: 'sbo16', category: 'sql-basic', difficulty: 'basic', type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'WHERE와 HAVING의 차이',
+    question: 'WHERE 절과 HAVING 절의 차이를 이해하고 있는지 확인합니다.',
+    learningPoint: 'WHERE는 개별 행을 필터링하고, HAVING은 GROUP BY 이후 그룹을 필터링한다',
+    tags: ['WHERE', 'HAVING'],
+    explanation: 'WHERE 절은 GROUP BY 이전에 개별 행을 필터링합니다. HAVING 절은 GROUP BY 이후 그룹화된 결과에 조건을 적용합니다. WHERE에서는 집계 함수를 사용할 수 없습니다.',
+    relatedConceptTags: ['select'],
+    statement: 'WHERE 절에서 COUNT(*) > 5 같은 집계 함수 조건을 사용할 수 있다.',
+    answer: 'X' as const,
+    hints: { directional: ['WHERE 절이 실행되는 시점을 생각해보세요'], constraint: ['집계 함수는 그룹화가 완료된 후에 계산됩니다'], misconception: ['WHERE는 개별 행에 대한 조건이므로 그룹 집계 결과를 알 수 없습니다'] } as const,
+  } as OxProblem,
+  {
+    id: 'sbo17', category: 'sql-basic', difficulty: 'intermediate', type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'ORDER BY에서 별칭 사용',
+    question: 'SELECT 절에서 지정한 별칭(AS)을 ORDER BY에서 사용할 수 있는지 확인합니다.',
+    learningPoint: 'SQL 실행 순서상 SELECT 별칭은 ORDER BY에서 사용 가능하다',
+    tags: ['ORDER BY', 'AS'],
+    explanation: 'SQL의 논리적 실행 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY입니다. ORDER BY는 SELECT 이후에 실행되므로 SELECT에서 정의한 별칭을 사용할 수 있습니다.',
+    relatedConceptTags: ['select'],
+    statement: 'SELECT salary * 12 AS annual_salary FROM employees ORDER BY annual_salary; 이 쿼리는 정상 실행된다.',
+    answer: 'O' as const,
+    hints: { directional: ['SQL의 논리적 실행 순서를 떠올려보세요'], constraint: ['ORDER BY가 SELECT보다 먼저 실행되는지, 나중에 실행되는지 확인하세요'], misconception: ['ORDER BY는 SELECT 이후에 실행되므로 SELECT에서 만든 별칭을 참조할 수 있습니다'] } as const,
+  } as OxProblem,
 ];

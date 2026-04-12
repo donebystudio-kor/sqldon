@@ -1,4 +1,4 @@
-import type { WriteProblem, FillProblem, OxProblem, PlanProblem } from '@/types/problem';
+import type { WriteProblem, FillProblem, OxProblem } from '@/types/problem';
 
 export const SQL_JOIN_PROBLEMS = [
   // ===== WRITE (sjw01) =====
@@ -1176,177 +1176,137 @@ export const SQL_JOIN_PROBLEMS = [
     relatedConceptTags: ['join'],
   } as OxProblem,
 
-  // ===== PLAN PROBLEMS (sjp01~sjp05) =====
+  // ===== FILL PROBLEMS (sjf31~sjf33) =====
   {
-    id: 'sjp01',
+    id: 'sjf31',
     category: 'sql-join',
     difficulty: 'basic',
-    type: 'plan',
-    title: 'Nested Loop Join의 특징',
-    question: '아래 실행계획에서 JOIN 방식을 확인하고, 가장 비용이 높은 단계를 찾으세요.',
-    planText: `--------------------------------------------------------------
-| Id  | Operation              | Name       | Rows  | Cost  |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT       |            |   500 |   850 |
-|   1 |  NESTED LOOPS          |            |   500 |   850 |
-|   2 |   TABLE ACCESS FULL    | ORDERS     | 10000 |   300 |
-|*  3 |   INDEX UNIQUE SCAN    | USERS_PK   |     1 |     1 |
---------------------------------------------------------------`,
-    choices: ['NESTED LOOPS', 'TABLE ACCESS FULL', 'INDEX UNIQUE SCAN'],
-    choiceExplanations: [
-      { value: 'NESTED LOOPS', explanation: '외부 테이블의 각 행에 대해 내부 테이블을 탐색합니다. 전체 조인 작업 노드입니다' },
-      { value: 'TABLE ACCESS FULL', explanation: 'ORDERS 테이블 1만 행을 전체 스캔합니다. 가장 비용이 높은 실제 작업입니다' },
-      { value: 'INDEX UNIQUE SCAN', explanation: '인덱스로 빠르게 1행을 찾습니다. 비용이 매우 낮습니다' },
-    ],
-    correctAnswer: 'TABLE ACCESS FULL',
-    hints: {
-      directional: ['Cost 값이 가장 높은 실제 작업 단계를 찾으세요'],
-      constraint: ['NESTED LOOPS는 조인 방식을 나타내는 노드이고, 실제 I/O는 하위 단계에서 발생합니다'],
-      misconception: ['NESTED LOOPS 자체는 조인 알고리즘이며, 실제 비용은 TABLE ACCESS FULL에서 발생합니다'],
-    },
-    learningPoint: 'Nested Loop Join에서 외부 테이블의 Full Scan이 병목이 될 수 있다',
-    tags: ['실행계획', 'Nested Loop Join'],
-    explanation: 'Nested Loop Join은 외부 테이블(ORDERS)의 각 행에 대해 내부 테이블(USERS)을 인덱스로 찾습니다. 외부 테이블의 Full Scan이 주요 비용입니다.',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'CROSS JOIN으로 모든 조합 생성',
+    question: '아래 SQL의 빈칸을 채워 colors 테이블과 sizes 테이블의 모든 조합을 조회하세요.',
+    learningPoint: 'CROSS JOIN은 두 테이블의 카르테시안 곱(모든 행 조합)을 생성한다',
+    tags: ['CROSS JOIN'],
+    explanation: 'CROSS JOIN은 ON 조건 없이 왼쪽 테이블의 모든 행과 오른쪽 테이블의 모든 행을 조합합니다. colors가 3행, sizes가 4행이면 결과는 12행입니다.',
     relatedConceptTags: ['join'],
-  } as PlanProblem,
+    sqlTemplate: 'SELECT c.color_name, s.size_label FROM colors c ___ ___ sizes s;',
+    blanks: 2,
+    options: ['CROSS', 'JOIN', 'INNER', 'LEFT', 'ON', 'WHERE'],
+    optionExplanations: [
+      { value: 'CROSS', explanation: '카르테시안 곱을 생성하는 JOIN 타입 키워드입니다' },
+      { value: 'JOIN', explanation: 'CROSS와 함께 사용하여 모든 조합을 만듭니다' },
+      { value: 'INNER', explanation: '조건을 만족하는 행만 반환합니다. 모든 조합을 원하면 CROSS가 적합합니다' },
+      { value: 'LEFT', explanation: '왼쪽 테이블을 보존하는 JOIN입니다. 모든 조합 생성과는 다릅니다' },
+      { value: 'ON', explanation: 'CROSS JOIN에는 ON 조건이 필요하지 않습니다' },
+      { value: 'WHERE', explanation: '필터링 조건이며, CROSS JOIN 자체와는 관련이 없습니다' },
+    ],
+    correctAnswers: ['CROSS', 'JOIN'],
+    hints: {
+      directional: ['두 테이블의 "모든 조합"을 만드는 JOIN 유형은 무엇일까요?'],
+      constraint: ['CROSS JOIN에는 ON 절이 필요 없습니다'],
+      misconception: ['INNER JOIN은 조건이 필요하고, CROSS JOIN은 조건 없이 모든 조합을 생성합니다'],
+    } as const,
+  } as FillProblem,
   {
-    id: 'sjp02',
+    id: 'sjf32',
     category: 'sql-join',
     difficulty: 'intermediate',
-    type: 'plan',
-    title: 'Hash Join의 비용 분석',
-    question: '아래 실행계획에서 사용된 JOIN 방식과 그 특성을 파악하세요.',
-    planText: `--------------------------------------------------------------
-| Id  | Operation            | Name       | Rows  | Cost  |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT     |            | 50000 |   620 |
-|*  1 |  HASH JOIN           |            | 50000 |   620 |
-|   2 |   TABLE ACCESS FULL  | USERS      |  5000 |   120 |
-|   3 |   TABLE ACCESS FULL  | ORDERS     | 50000 |   300 |
---------------------------------------------------------------`,
-    choices: ['HASH JOIN', 'TABLE ACCESS FULL (USERS)', 'TABLE ACCESS FULL (ORDERS)'],
-    choiceExplanations: [
-      { value: 'HASH JOIN', explanation: '작은 테이블로 해시 테이블을 만들고 큰 테이블을 순회합니다. 대용량 조인에 효율적입니다' },
-      { value: 'TABLE ACCESS FULL (USERS)', explanation: '5천 행 Full Scan. 작은 테이블이므로 해시 테이블 구축에 사용됩니다' },
-      { value: 'TABLE ACCESS FULL (ORDERS)', explanation: '5만 행 Full Scan. 큰 테이블이므로 해시 테이블을 탐색(probe)합니다' },
-    ],
-    correctAnswer: 'HASH JOIN',
-    hints: {
-      directional: ['전체 비용(620)이 가장 높은 단계를 찾으세요'],
-      constraint: ['HASH JOIN은 해시 테이블 구축 + 탐색 비용이 합쳐진 것입니다'],
-      misconception: ['Full Scan 비용(120+300=420)보다 HASH JOIN(620)이 더 큰 이유는 해시 연산 비용이 추가되기 때문입니다'],
-    },
-    learningPoint: 'Hash Join은 작은 테이블로 해시를 만들고 큰 테이블로 탐색하여 대용량에 효율적이다',
-    tags: ['실행계획', 'Hash Join'],
-    explanation: 'Hash Join은 작은 테이블(USERS)로 해시 테이블을 만들고(build), 큰 테이블(ORDERS)을 순회하며 매칭합니다(probe). 대용량 등가 조인에 효율적입니다.',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: 'SELF JOIN으로 같은 부서 동료 찾기',
+    question: '아래 SQL의 빈칸을 채워 같은 부서에 속한 서로 다른 직원 쌍을 조회하세요.',
+    learningPoint: 'SELF JOIN은 같은 테이블을 서로 다른 별칭으로 조인하여 행 간 관계를 탐색한다',
+    tags: ['SELF JOIN', 'INNER JOIN'],
+    explanation: 'SELF JOIN은 동일한 테이블을 두 번 참조하여 행 간의 관계를 찾습니다. 여기서는 같은 department_id를 갖지만 서로 다른 직원(e1.id < e2.id)을 조회합니다.',
     relatedConceptTags: ['join'],
-  } as PlanProblem,
-  {
-    id: 'sjp03',
-    category: 'sql-join',
-    difficulty: 'intermediate',
-    type: 'plan',
-    title: 'Sort Merge Join 식별',
-    question: '아래 실행계획에서 사용된 JOIN 방식을 식별하세요.',
-    planText: `--------------------------------------------------------------
-| Id  | Operation              | Name        | Rows  | Cost  |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT       |             | 30000 |   980 |
-|   1 |  MERGE JOIN            |             | 30000 |   980 |
-|   2 |   SORT JOIN            |             | 10000 |   450 |
-|   3 |    TABLE ACCESS FULL   | DOCTORS     | 10000 |   200 |
-|   4 |   SORT JOIN            |             | 30000 |   530 |
-|   5 |    TABLE ACCESS FULL   | APPOINTMENTS| 30000 |   280 |
---------------------------------------------------------------`,
-    choices: ['MERGE JOIN', 'SORT JOIN (DOCTORS)', 'SORT JOIN (APPOINTMENTS)'],
-    choiceExplanations: [
-      { value: 'MERGE JOIN', explanation: '정렬된 두 데이터를 병합합니다. 전체 조인 작업의 최상위 노드입니다' },
-      { value: 'SORT JOIN (DOCTORS)', explanation: 'DOCTORS를 조인 키로 정렬합니다. Cost 450입니다' },
-      { value: 'SORT JOIN (APPOINTMENTS)', explanation: 'APPOINTMENTS를 조인 키로 정렬합니다. Cost 530으로 가장 높습니다' },
+    sqlTemplate: 'SELECT e1.name, e2.name FROM employees e1 ___ ___ employees e2 ON e1.department_id = e2.department_id AND e1.id ___ e2.id;',
+    blanks: 3,
+    options: ['INNER', 'JOIN', '<', '>', '=', 'LEFT'],
+    optionExplanations: [
+      { value: 'INNER', explanation: '양쪽 매칭되는 행만 반환하는 JOIN 타입입니다' },
+      { value: 'JOIN', explanation: 'INNER와 함께 사용하는 조인 키워드입니다' },
+      { value: '<', explanation: '중복 쌍을 방지하기 위해 e1.id < e2.id 조건을 사용합니다' },
+      { value: '>', explanation: '부등호 방향이 반대입니다. e1.id < e2.id가 관례입니다' },
+      { value: '=', explanation: '같은 id끼리 조인하면 자기 자신과만 매칭됩니다' },
+      { value: 'LEFT', explanation: 'LEFT JOIN은 여기서 불필요합니다. 매칭되는 쌍만 필요합니다' },
     ],
-    correctAnswer: 'SORT JOIN (APPOINTMENTS)',
+    correctAnswers: ['INNER', 'JOIN', '<'],
     hints: {
-      directional: ['정렬 비용이 가장 높은 단계를 찾으세요'],
-      constraint: ['Sort Merge Join은 양쪽 테이블을 정렬한 뒤 병합합니다'],
-      misconception: ['MERGE JOIN 자체는 비용이 낮고, 정렬(SORT) 단계에서 주요 비용이 발생합니다'],
-    },
-    learningPoint: 'Sort Merge Join은 양쪽 정렬 후 병합하며, 정렬 비용이 주요 병목이다',
-    tags: ['실행계획', 'Sort Merge Join'],
-    explanation: 'Sort Merge Join은 양쪽 테이블을 조인 키로 정렬(SORT JOIN)한 뒤 순차적으로 병합(MERGE JOIN)합니다. 데이터가 클수록 정렬 비용이 큽니다.',
-    relatedConceptTags: ['join'],
-  } as PlanProblem,
+      directional: ['같은 테이블을 별칭을 달리하여 조인하는 것이 SELF JOIN입니다'],
+      constraint: ['중복 쌍(A-B와 B-A)을 방지하려면 id에 부등호 조건을 걸어야 합니다'],
+      misconception: ['e1.id = e2.id로 하면 자기 자신과만 매칭되어 의미가 없습니다'],
+    } as const,
+  } as FillProblem,
   {
-    id: 'sjp04',
+    id: 'sjf33',
     category: 'sql-join',
     difficulty: 'advanced',
-    type: 'plan',
-    title: 'LEFT JOIN 실행계획의 OUTER 키워드',
-    question: '아래 실행계획에서 LEFT JOIN임을 나타내는 단계를 찾으세요.',
-    planText: `--------------------------------------------------------------
-| Id  | Operation               | Name        | Rows  | Cost |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT        |             |  5000 |  450 |
-|*  1 |  HASH JOIN OUTER        |             |  5000 |  450 |
-|   2 |   TABLE ACCESS FULL     | CHARACTERS  |  5000 |  120 |
-|   3 |   TABLE ACCESS FULL     | INVENTORIES |  8000 |  180 |
---------------------------------------------------------------`,
-    choices: ['HASH JOIN OUTER', 'TABLE ACCESS FULL (CHARACTERS)', 'TABLE ACCESS FULL (INVENTORIES)'],
-    choiceExplanations: [
-      { value: 'HASH JOIN OUTER', explanation: 'OUTER 키워드가 LEFT/RIGHT/FULL JOIN임을 나타냅니다' },
-      { value: 'TABLE ACCESS FULL (CHARACTERS)', explanation: '전체 테이블 스캔이지만, LEFT JOIN 여부와 무관합니다' },
-      { value: 'TABLE ACCESS FULL (INVENTORIES)', explanation: '전체 테이블 스캔이지만, LEFT JOIN 여부와 무관합니다' },
-    ],
-    correctAnswer: 'HASH JOIN OUTER',
-    hints: {
-      directional: ['실행계획에서 OUTER라는 키워드에 주목하세요'],
-      constraint: ['INNER JOIN은 HASH JOIN으로, LEFT JOIN은 HASH JOIN OUTER로 표시됩니다'],
-      misconception: ['TABLE ACCESS FULL은 테이블 스캔 방식이며 JOIN 유형과는 별개입니다'],
-    },
-    learningPoint: '실행계획에서 OUTER 키워드는 LEFT/RIGHT/FULL JOIN을 나타낸다',
-    tags: ['실행계획', 'OUTER', 'LEFT JOIN'],
-    explanation: '실행계획에서 HASH JOIN OUTER, NESTED LOOPS OUTER 등 OUTER 키워드가 있으면 LEFT/RIGHT/FULL JOIN입니다.',
+    type: 'fill',
+    availableModes: ['fill'] as const,
+    title: '3개 테이블 다중 조인',
+    question: '아래 SQL의 빈칸을 채워 주문 정보와 함께 고객 이름, 상품명을 조회하세요. 주문이 없는 고객도 포함해야 합니다.',
+    learningPoint: '다중 테이블 조인 시 각 조인의 유형(LEFT/INNER)을 목적에 맞게 선택해야 한다',
+    tags: ['LEFT JOIN', 'INNER JOIN', '다중 조인'],
+    explanation: '첫 번째 조인은 주문이 없는 고객도 포함해야 하므로 LEFT JOIN을 사용하고, 두 번째 조인은 주문이 있는 경우에만 상품 정보가 필요하므로 LEFT JOIN을 사용합니다.',
     relatedConceptTags: ['join'],
-  } as PlanProblem,
-  {
-    id: 'sjp05',
-    category: 'sql-join',
-    difficulty: 'advanced',
-    type: 'plan',
-    title: '인덱스 활용 Nested Loop vs Hash Join',
-    question: '아래 두 실행계획을 비교하여 더 효율적인 방식을 선택하세요.',
-    planText: `-- Plan A: Nested Loop (인덱스 활용) --
---------------------------------------------------------------
-| Id  | Operation                | Name         | Rows | Cost |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT         |              |  100 |  210 |
-|   1 |  NESTED LOOPS            |              |  100 |  210 |
-|*  2 |   TABLE ACCESS BY INDEX  | ORDERS       |  100 |   10 |
-|*  3 |   INDEX UNIQUE SCAN      | USERS_PK     |    1 |    1 |
---------------------------------------------------------------
+    sqlTemplate: 'SELECT c.name, o.order_id, p.product_name FROM customers c ___ JOIN orders o ON c.id = o.customer_id ___ JOIN products p ON o.product_id = p.id;',
+    blanks: 2,
+    options: ['LEFT', 'INNER', 'RIGHT', 'CROSS', 'FULL', 'OUTER'],
+    optionExplanations: [
+      { value: 'LEFT', explanation: '왼쪽 테이블의 모든 행을 보존합니다. 주문 없는 고객도 포함하려면 필요합니다' },
+      { value: 'INNER', explanation: '양쪽 매칭되는 행만 반환합니다. 주문 없는 고객이 제외됩니다' },
+      { value: 'RIGHT', explanation: '오른쪽 테이블을 보존합니다. 이 문맥에서는 적합하지 않습니다' },
+      { value: 'CROSS', explanation: '모든 조합을 생성합니다. 조건 기반 조인이 아닙니다' },
+      { value: 'FULL', explanation: '양쪽 모두 보존합니다. 고객 기준 조회이므로 LEFT면 충분합니다' },
+      { value: 'OUTER', explanation: 'LEFT/RIGHT/FULL 뒤에 붙는 선택적 키워드입니다' },
+    ],
+    correctAnswers: ['LEFT', 'LEFT'],
+    hints: {
+      directional: ['주문이 없는 고객도 포함해야 하므로 첫 번째 조인 유형을 생각해보세요'],
+      constraint: ['주문이 NULL이면 상품 조인도 NULL이 되므로 두 번째도 LEFT JOIN이 적합합니다'],
+      misconception: ['두 번째 조인을 INNER로 하면 주문이 없는 고객 행이 사라집니다'],
+    } as const,
+  } as FillProblem,
 
--- Plan B: Hash Join (Full Scan) --
---------------------------------------------------------------
-| Id  | Operation            | Name       | Rows  | Cost  |
---------------------------------------------------------------
-|   0 | SELECT STATEMENT     |            |   100 |   420 |
-|*  1 |  HASH JOIN           |            |   100 |   420 |
-|   2 |   TABLE ACCESS FULL  | USERS      |  5000 |   120 |
-|   3 |   TABLE ACCESS FULL  | ORDERS     | 50000 |   300 |
---------------------------------------------------------------`,
-    choices: ['Plan A (Nested Loop)', 'Plan B (Hash Join)'],
-    choiceExplanations: [
-      { value: 'Plan A (Nested Loop)', explanation: '인덱스를 활용하여 필요한 100건만 효율적으로 조인합니다. Cost 210' },
-      { value: 'Plan B (Hash Join)', explanation: '양쪽 테이블을 Full Scan하여 전체를 해시합니다. Cost 420' },
-    ],
-    correctAnswer: 'Plan A (Nested Loop)',
-    hints: {
-      directional: ['전체 Cost를 비교하세요. 낮은 쪽이 효율적입니다'],
-      constraint: ['소량의 결과(100건)를 조회할 때 인덱스 활용이 효과적입니다'],
-      misconception: ['Hash Join이 항상 좋은 것은 아닙니다. 소량 조회 시 Nested Loop + 인덱스가 유리합니다'],
-    },
-    learningPoint: '소량 결과 조회 시 인덱스 기반 Nested Loop Join이 Hash Join보다 효율적이다',
-    tags: ['실행계획', 'Nested Loop', 'Hash Join', '인덱스'],
-    explanation: '100건만 필요한 경우 인덱스로 빠르게 찾는 Nested Loop(Cost 210)이 전체 스캔하는 Hash Join(Cost 420)보다 훨씬 효율적입니다.',
+  // ===== OX PROBLEMS (sjo16~sjo17) =====
+  {
+    id: 'sjo16',
+    category: 'sql-join',
+    difficulty: 'intermediate',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'FULL OUTER JOIN의 결과',
+    question: 'FULL OUTER JOIN은 양쪽 테이블 모두에서 매칭되지 않는 행도 포함하여 결과를 반환한다.',
+    statement: 'FULL OUTER JOIN은 양쪽 테이블 모두에서 매칭되지 않는 행도 포함하여 결과를 반환한다.',
+    answer: 'O' as const,
+    learningPoint: 'FULL OUTER JOIN은 LEFT JOIN + RIGHT JOIN의 합집합이다',
+    tags: ['FULL OUTER JOIN'],
+    explanation: 'FULL OUTER JOIN은 LEFT JOIN과 RIGHT JOIN의 합집합입니다. 왼쪽 테이블에만 있는 행, 오른쪽 테이블에만 있는 행, 양쪽 모두 매칭되는 행 전부를 반환하며, 매칭되지 않는 쪽은 NULL로 채워집니다.',
     relatedConceptTags: ['join'],
-  } as PlanProblem,
+    hints: {
+      directional: ['FULL OUTER JOIN은 LEFT JOIN과 RIGHT JOIN을 합친 것과 같습니다'],
+      constraint: ['매칭되지 않는 행의 반대쪽 컬럼은 NULL로 채워집니다'],
+      misconception: ['FULL OUTER JOIN이 INNER JOIN처럼 매칭된 행만 반환한다고 오해하지 마세요'],
+    } as const,
+  } as OxProblem,
+  {
+    id: 'sjo17',
+    category: 'sql-join',
+    difficulty: 'advanced',
+    type: 'ox',
+    availableModes: ['write', 'fill'] as const,
+    title: 'ON 절과 WHERE 절의 차이 (LEFT JOIN)',
+    question: 'LEFT JOIN에서 ON 절에 오른쪽 테이블의 필터 조건을 넣는 것과 WHERE 절에 넣는 것은 동일한 결과를 반환한다.',
+    statement: 'LEFT JOIN에서 ON 절에 오른쪽 테이블의 필터 조건을 넣는 것과 WHERE 절에 넣는 것은 동일한 결과를 반환한다.',
+    answer: 'X' as const,
+    learningPoint: 'LEFT JOIN에서 ON 조건은 조인 전에 적용되고, WHERE 조건은 조인 후에 적용된다',
+    tags: ['LEFT JOIN', 'ON', 'WHERE'],
+    explanation: 'LEFT JOIN에서 ON 절의 조건은 오른쪽 테이블에 대해 조인 전에 필터링하지만, 왼쪽 테이블의 행은 모두 보존됩니다. 반면 WHERE 절의 조건은 조인 후 결과 전체에 적용되므로, 매칭되지 않아 NULL인 행이 제거되어 사실상 INNER JOIN과 같은 결과가 됩니다.',
+    relatedConceptTags: ['join'],
+    hints: {
+      directional: ['ON 절 조건과 WHERE 절 조건이 적용되는 시점이 다릅니다'],
+      constraint: ['LEFT JOIN의 핵심은 왼쪽 테이블의 행을 보존하는 것입니다'],
+      misconception: ['WHERE 절에 오른쪽 테이블 조건을 넣으면 NULL 행이 제거되어 INNER JOIN처럼 됩니다'],
+    } as const,
+  } as OxProblem,
 ];
