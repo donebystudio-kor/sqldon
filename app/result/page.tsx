@@ -109,7 +109,7 @@ export default function ResultPage() {
             return (
               <Link
                 key={cat.id}
-                href={`/quiz/${cat.id}`}
+                href={`/quiz/${cat.id}?mode=unsolved`}
                 className="block bg-surface border border-border rounded-lg p-4 hover:border-primary active:scale-[0.99] transition-all"
               >
                 <div className="flex items-center justify-between mb-2">
@@ -181,7 +181,7 @@ export default function ResultPage() {
             {wrongProblems.map(p => p && (
               <Link
                 key={p.id}
-                href={`/quiz/${p.category}`}
+                href={`/quiz/${p.category}?mode=wrong`}
                 className="flex items-center justify-between bg-surface border-2 border-error/20 rounded-lg p-4 hover:border-error active:scale-[0.99] transition-all"
               >
                 <div>
@@ -226,7 +226,7 @@ export default function ResultPage() {
                     </Link>
                   )}
                   <Link
-                    href={`/quiz/${p.category}`}
+                    href={`/quiz/${p.category}?mode=unsolved`}
                     className="text-sm text-warning font-medium hover:underline"
                   >
                     풀어보기 →

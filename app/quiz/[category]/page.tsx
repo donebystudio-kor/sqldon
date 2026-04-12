@@ -10,7 +10,7 @@ import QuizShell from '@/components/quiz/QuizShell';
 
 interface Props {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ difficulty?: string; type?: string }>;
+  searchParams: Promise<{ difficulty?: string; type?: string; mode?: string }>;
 }
 
 const VALID_CATEGORIES = CATEGORIES.map(c => c.id);
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function QuizCategoryPage({ params, searchParams }: Props) {
   const { category } = await params;
-  const { difficulty: filterDifficulty, type: filterType } = await searchParams;
+  const { difficulty: filterDifficulty, type: filterType, mode } = await searchParams;
 
   if (!VALID_CATEGORIES.includes(category as CategoryId)) {
     notFound();
@@ -127,6 +127,7 @@ export default async function QuizCategoryPage({ params, searchParams }: Props) 
         categoryName={cat.name}
         filterDifficulty={filterDifficulty}
         filterType={filterType}
+        mode={(mode === 'unsolved' || mode === 'wrong') ? mode : 'all'}
       />
 
       {/* Problem list for SEO (crawlable, collapsed by default) */}

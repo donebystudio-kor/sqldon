@@ -11,12 +11,15 @@ import FillCard from './FillCard';
 import OxCard from './OxCard';
 import PlanCard from './PlanCard';
 
+type QuizMode = 'all' | 'unsolved' | 'wrong';
+
 interface Props {
   problems: Problem[];
   category: CategoryId;
   categoryName: string;
   filterDifficulty?: string;
   filterType?: string;
+  mode?: QuizMode;
 }
 
 const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
@@ -74,7 +77,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function QuizShell({ problems, category, categoryName, filterDifficulty, filterType }: Props) {
+export default function QuizShell({ problems, category, categoryName, filterDifficulty, filterType, mode = 'all' }: Props) {
   const filtered = problems.filter(p => {
     if (p.type === 'write') return false;
     if (filterDifficulty && filterDifficulty !== 'all' && p.difficulty !== filterDifficulty) return false;
@@ -90,10 +93,20 @@ export default function QuizShell({ problems, category, categoryName, filterDiff
   const [globalProgress, setGlobalProgress] = useState({ solved: 0, total: 16 });
 
   useEffect(() => {
-    setAvailableProblems(shuffle(filtered));
+    const progress = storage.getProgress();
+    const wrongIds = storage.getWrongAnswers();
+
+    let target = filtered;
+    if (mode === 'unsolved') {
+      target = filtered.filter(p => !(p.id in progress) || wrongIds.includes(p.id));
+    } else if (mode === 'wrong') {
+      target = filtered.filter(p => wrongIds.includes(p.id));
+    }
+
+    setAvailableProblems(shuffle(target));
     setIndex(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, filterDifficulty, filterType]);
+  }, [category, filterDifficulty, filterType, mode]);
 
   useEffect(() => {
     storage.setRecentCategory(category);
@@ -102,9 +115,20 @@ export default function QuizShell({ problems, category, categoryName, filterDiff
 
   const problem = availableProblems[index];
   if (!problem) {
+    const emptyMsg = mode === 'unsolved' ? '안 푼 문제가 없습니다! 모든 문제를 완료했어요.'
+      : mode === 'wrong' ? '틀린 문제가 없습니다! 대단해요.'
+      : '이 카테고리에 문제가 없습니다.';
     return (
-      <div className="text-center py-16 text-text-sub">
-        이 카테고리에 문제가 없습니다.
+      <div className="text-center py-16">
+        <p className="text-text-sub mb-4">{emptyMsg}</p>
+        {mode !== 'all' && (
+          <Link
+            href={`/quiz/${category}`}
+            className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-all"
+          >
+            전체 문제 풀기
+          </Link>
+        )}
       </div>
     );
   }
@@ -283,7 +307,7 @@ export default function QuizShell({ problems, category, categoryName, filterDiff
 
             {/* Wrong answers */}
             <Link
-              href="/result#wrong"
+              href={`/quiz/${category}?mode=wrong`}
               className="px-5 py-2.5 rounded-xl text-text-muted text-sm font-medium hover:text-error active:scale-[0.97] transition-all text-center"
             >
               틀린 문제 다시 풀기
