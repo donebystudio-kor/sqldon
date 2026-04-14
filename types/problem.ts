@@ -1,7 +1,7 @@
 export type ProblemType = 'write' | 'fill' | 'ox' | 'plan';
 export type SolveMode = 'write' | 'fill';
 export type Difficulty = 'basic' | 'intermediate' | 'advanced';
-export type CategoryId = 'sql-basic' | 'sql-join' | 'sql-aggregate' | 'sql-subquery' | 'sql-window' | 'sql-tuning' | 'oracle-arch';
+export type CategoryId = 'sql-basic' | 'sql-join' | 'sql-aggregate' | 'sql-subquery' | 'sql-window' | 'sql-advanced' | 'sql-tuning' | 'oracle-arch';
 
 export interface OptionWithExplanation {
   value: string;

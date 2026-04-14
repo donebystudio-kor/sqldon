@@ -57,12 +57,21 @@ export const CATEGORIES: Category[] = [
     color: '#EC4899',
   },
   {
+    id: 'sql-advanced',
+    name: '고급 SQL',
+    shortDescription: 'CONNECT BY / CTE / WITH RECURSIVE',
+    longDescription: '계층형 쿼리와 CTE를 학습합니다. 오라클 CONNECT BY와 표준 SQL WITH RECURSIVE를 다룹니다.',
+    icon: '\uD83C\uDF33',
+    order: 6,
+    color: '#D946EF',
+  },
+  {
     id: 'sql-tuning',
     name: '튜닝 / 실행계획',
     shortDescription: '인덱스 / Full Scan / Join 방식 / 병목',
     longDescription: 'SQL 성능을 좌우하는 실행계획 읽기와 튜닝 포인트를 학습합니다.',
     icon: '\u26A1',
-    order: 6,
+    order: 7,
     color: '#EF4444',
   },
   {
@@ -71,7 +80,7 @@ export const CATEGORIES: Category[] = [
     shortDescription: 'SGA / PGA / Buffer Cache / Shared Pool',
     longDescription: '오라클 데이터베이스의 내부 구조를 이해합니다. 메모리, 프로세스, 파일 구조를 학습합니다.',
     icon: '\uD83C\uDFDB\uFE0F',
-    order: 7,
+    order: 8,
     color: '#6366F1',
   },
 ];

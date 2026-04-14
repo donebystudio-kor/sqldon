@@ -42,7 +42,7 @@ const TYPE_GUIDE: Record<string, string> = {
 
 const CATEGORY_ORDER: CategoryId[] = [
   'sql-basic', 'sql-join', 'sql-aggregate', 'sql-subquery',
-  'sql-window', 'sql-tuning', 'oracle-arch',
+  'sql-window', 'sql-advanced', 'sql-tuning', 'oracle-arch',
 ];
 
 function getNextCategory(current: CategoryId): CategoryId | null {

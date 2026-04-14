@@ -22,6 +22,7 @@ const CATEGORY_SEO: Record<string, { title: string; keywords: string }> = {
   'sql-aggregate': { title: 'SQL 집계 문제 모음 | GROUP BY HAVING 연습', keywords: 'GROUP BY, HAVING, COUNT, SUM, AVG 집계' },
   'sql-subquery': { title: 'SQL 서브쿼리 문제 모음 | 단일행 다중행 상관 쿼리', keywords: '서브쿼리, 단일행, 다중행, 상관 서브쿼리, IN, EXISTS' },
   'sql-window': { title: 'SQL 윈도우 함수 문제 | ROW_NUMBER RANK LAG 연습', keywords: '윈도우 함수, ROW_NUMBER, RANK, PARTITION BY' },
+  'sql-advanced': { title: '고급 SQL 문제 | CONNECT BY CTE 계층형 쿼리 연습', keywords: 'CONNECT BY, CTE, WITH RECURSIVE, 계층형 쿼리, START WITH' },
   'sql-tuning': { title: 'SQL 튜닝 실행계획 문제 | 인덱스 Full Scan 분석', keywords: '실행계획, SQL 튜닝, 인덱스, Full Table Scan' },
   'oracle-arch': { title: '오라클 아키텍처 문제 | SGA PGA 구조 학습', keywords: 'SGA, PGA, Buffer Cache, Shared Pool, 오라클' },
 };
