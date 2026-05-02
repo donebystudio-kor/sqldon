@@ -1,10 +1,9 @@
 import { ALL_PROBLEMS } from '@/data/problems';
 import { CONCEPTS } from '@/data/concepts';
-import type { Problem } from '@/types/problem';
-import type { Concept } from '@/types/concept';
+import { ALL_DICTIONARY } from '@/data/dictionary';
 
 export interface SearchResult {
-  type: 'problem' | 'concept';
+  type: 'problem' | 'concept' | 'term';
   id: string;
   title: string;
   description: string;
@@ -46,5 +45,21 @@ export function search(query: string): SearchResult[] {
       href: `/concept/${c.tag}`,
     }));
 
-  return [...conceptResults, ...problemResults].slice(0, 10);
+  const termResults: SearchResult[] = ALL_DICTIONARY
+    .filter(e =>
+      e.title.toLowerCase().includes(q) ||
+      e.shortDescription.toLowerCase().includes(q) ||
+      e.slug.toLowerCase().includes(q) ||
+      e.tags.some(t => t.toLowerCase().includes(q))
+    )
+    .map(e => ({
+      type: 'term' as const,
+      id: e.slug,
+      title: e.title,
+      description: e.shortDescription,
+      href: `/terms/${e.slug}`,
+      tags: e.tags,
+    }));
+
+  return [...termResults, ...conceptResults, ...problemResults].slice(0, 10);
 }
