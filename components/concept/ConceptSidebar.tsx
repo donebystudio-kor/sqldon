@@ -2,82 +2,30 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-
-interface ConceptItem {
-  tag: string;
-  title: string;
-  ready: boolean; // false = 준비 중
-}
-
-interface ConceptGroup {
-  group: string;
-  items: ConceptItem[];
-}
-
-const CONCEPT_NAV: ConceptGroup[] = [
-  {
-    group: '기초 SQL',
-    items: [
-      { tag: 'select', title: 'SELECT 문', ready: true },
-      { tag: 'where', title: 'WHERE 조건', ready: true },
-      { tag: 'order-by', title: 'ORDER BY 정렬', ready: true },
-      { tag: 'distinct', title: 'DISTINCT 중복 제거', ready: true },
-      { tag: 'null-handling', title: 'NULL 처리', ready: true },
-    ],
-  },
-  {
-    group: 'JOIN',
-    items: [
-      { tag: 'join', title: 'JOIN 개념', ready: true },
-      { tag: 'inner-join', title: 'INNER JOIN', ready: true },
-      { tag: 'left-right-join', title: 'LEFT / RIGHT JOIN', ready: true },
-    ],
-  },
-  {
-    group: '집계',
-    items: [
-      { tag: 'group-by', title: 'GROUP BY', ready: true },
-      { tag: 'having', title: 'HAVING', ready: true },
-    ],
-  },
-  {
-    group: '윈도우 함수',
-    items: [
-      { tag: 'window-function', title: '윈도우 함수', ready: true },
-      { tag: 'partition-by', title: 'PARTITION BY', ready: true },
-      { tag: 'rank-row-number', title: 'RANK / ROW_NUMBER', ready: true },
-    ],
-  },
-  {
-    group: '튜닝 / 실행계획',
-    items: [
-      { tag: 'full-table-scan', title: 'Full Table Scan', ready: true },
-      { tag: 'index-range-scan', title: 'Index Range Scan', ready: true },
-    ],
-  },
-  {
-    group: '오라클 아키텍처',
-    items: [
-      { tag: 'sga', title: 'SGA 구조', ready: true },
-      { tag: 'pga', title: 'PGA', ready: true },
-      { tag: 'bg-processes', title: '백그라운드 프로세스', ready: true },
-    ],
-  },
-];
+import { CONCEPTS } from '@/data/concepts';
+import { CONCEPT_CATEGORIES } from '@/types/concept';
 
 interface Props {
   currentTag: string;
   mode: 'sidebar' | 'dropdown';
 }
 
+const NAV_GROUPS = CONCEPT_CATEGORIES
+  .map(cat => ({
+    group: cat.name,
+    catId: cat.id,
+    items: CONCEPTS
+      .filter(c => c.category === cat.id)
+      .map(c => ({ tag: c.tag, title: c.title })),
+  }))
+  .filter(g => g.items.length > 0);
+
 export default function ConceptSidebar({ currentTag, mode }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Find which group the current tag belongs to
-  const currentGroup = CONCEPT_NAV.find(g => g.items.some(i => i.tag === currentTag))?.group;
-  const currentTitle = CONCEPT_NAV.flatMap(g => g.items).find(i => i.tag === currentTag)?.title || '개념 선택';
+  const currentGroup = NAV_GROUPS.find(g => g.items.some(i => i.tag === currentTag))?.group;
+  const currentTitle = NAV_GROUPS.flatMap(g => g.items).find(i => i.tag === currentTag)?.title || '개념 선택';
 
-  // Accordion: open groups (current group always open)
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(currentGroup ? [currentGroup] : []));
 
   const toggleGroup = (group: string) => {
@@ -91,7 +39,7 @@ export default function ConceptSidebar({ currentTag, mode }: Props) {
 
   const navContent = (
     <nav className="space-y-1">
-      {CONCEPT_NAV.map(group => {
+      {NAV_GROUPS.map(group => {
         const isOpen = openGroups.has(group.group);
         const hasActive = group.items.some(i => i.tag === currentTag);
 
@@ -116,20 +64,6 @@ export default function ConceptSidebar({ currentTag, mode }: Props) {
               <ul className="mt-1 ml-2 space-y-0.5 pb-2">
                 {group.items.map(item => {
                   const isActive = item.tag === currentTag;
-
-                  if (!item.ready) {
-                    return (
-                      <li key={item.tag}>
-                        <span className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-text-muted cursor-default">
-                          {item.title}
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-border text-text-muted font-medium">
-                            준비 중
-                          </span>
-                        </span>
-                      </li>
-                    );
-                  }
-
                   return (
                     <li key={item.tag}>
                       <Link
@@ -157,7 +91,12 @@ export default function ConceptSidebar({ currentTag, mode }: Props) {
   if (mode === 'sidebar') {
     return (
       <div className="sticky top-20">
-        <p className="text-sm font-bold mb-3">개념 목록</p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-bold">개념 목록</p>
+          <Link href="/concept" className="text-xs text-primary hover:underline">
+            전체 보기
+          </Link>
+        </div>
         {navContent}
       </div>
     );

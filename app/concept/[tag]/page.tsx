@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { CONCEPTS, getConceptByTag } from '@/data/concepts';
+import { CONCEPTS, getConceptByTag, getRelatedConcepts } from '@/data/concepts';
+import { CONCEPT_CATEGORIES, CONCEPT_DOMAINS } from '@/types/concept';
 import { CATEGORIES } from '@/constants/categories';
 import { ALL_PROBLEMS } from '@/data/problems';
 import { SITE } from '@/constants/site';
@@ -13,34 +14,10 @@ interface Props {
   params: Promise<{ tag: string }>;
 }
 
-const CONCEPT_SEO: Record<string, string> = {
-  'select': 'SQL SELECT 문 완전 정리',
-  'where': 'SQL WHERE 조건절 완전 정리 (비교, NULL, AND/OR)',
-  'order-by': 'SQL ORDER BY 정렬 완전 정리 (ASC, DESC)',
-  'distinct': 'SQL DISTINCT 중복 제거 완전 정리',
-  'null-handling': 'SQL NULL 처리 완전 정리 (IS NULL, COALESCE)',
-  'join': 'SQL JOIN 완전 정리 (INNER, LEFT, RIGHT)',
-  'inner-join': 'SQL INNER JOIN 완전 정리',
-  'left-right-join': 'SQL LEFT JOIN / RIGHT JOIN 완전 정리',
-  'group-by': 'SQL GROUP BY 완전 정리 (HAVING, 집계 함수)',
-  'having': 'SQL HAVING 절 완전 정리 (GROUP BY 필터링)',
-  'window-function': 'SQL 윈도우 함수 완전 정리 (ROW_NUMBER, RANK)',
-  'partition-by': 'SQL PARTITION BY 완전 정리 (윈도우 그룹 분할)',
-  'rank-row-number': 'SQL RANK / ROW_NUMBER 완전 정리 (순위 함수)',
-  'full-table-scan': 'Full Table Scan 완전 정리 (실행계획, 인덱스)',
-  'index-range-scan': 'Index Range Scan 완전 정리 (인덱스 활용)',
-  'sga': '오라클 SGA 구조 완전 정리 (Buffer Cache, Shared Pool)',
-  'pga': '오라클 PGA 구조 완전 정리 (Sort Area, Hash Area)',
-  'bg-processes': '오라클 백그라운드 프로세스 완전 정리 (DBWn, LGWR)',
-};
-
-const TAG_CATEGORY: Record<string, string> = {
-  'select': '기초 SQL', 'where': '기초 SQL', 'order-by': '기초 SQL', 'distinct': '기초 SQL', 'null-handling': '기초 SQL',
-  'join': 'JOIN', 'inner-join': 'JOIN', 'left-right-join': 'JOIN',
-  'group-by': '집계', 'having': '집계',
-  'window-function': '윈도우 함수', 'partition-by': '윈도우 함수', 'rank-row-number': '윈도우 함수',
-  'full-table-scan': '튜닝 / 실행계획', 'index-range-scan': '튜닝 / 실행계획',
-  'sga': '오라클 아키텍처', 'pga': '오라클 아키텍처', 'bg-processes': '오라클 아키텍처',
+const DIFFICULTY_LABEL: Record<string, string> = {
+  beginner: '입문',
+  intermediate: '중급',
+  advanced: '고급',
 };
 
 export async function generateStaticParams() {
@@ -52,8 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const concept = getConceptByTag(tag);
   if (!concept) return {};
 
-  const seoTitle = CONCEPT_SEO[tag] || concept.title;
-  const description = `${concept.shortDefinition} ${concept.whyImportant.slice(0, 80)}`;
+  const seoTitle = `${concept.title} — ${concept.shortDefinition}`;
+  const description = `${concept.shortDefinition} ${concept.whyImportant.slice(0, 100)}`;
   const url = `${SITE.url}/concept/${tag}`;
 
   return {
@@ -61,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${seoTitle} | ${SITE.name}`,
+      title: `${concept.title} | ${SITE.name}`,
       description,
       url,
       type: 'article',
@@ -76,8 +53,9 @@ export default async function ConceptPage({ params }: Props) {
 
   if (!concept) notFound();
 
-  const seoTitle = CONCEPT_SEO[tag] || concept.title;
-  const categoryName = TAG_CATEGORY[tag] || '개념';
+  const category = CONCEPT_CATEGORIES.find(c => c.id === concept.category);
+  const domain = CONCEPT_DOMAINS.find(d => d.id === concept.domain);
+  const related = getRelatedConcepts(concept);
 
   const relatedProblems = ALL_PROBLEMS.filter(
     p => p.relatedConceptTags?.includes(tag)
@@ -86,7 +64,7 @@ export default async function ConceptPage({ params }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
-    headline: seoTitle,
+    headline: concept.title,
     description: concept.shortDefinition,
     about: { '@type': 'Thing', name: concept.title },
     author: { '@type': 'Organization', name: SITE.name },
@@ -118,40 +96,107 @@ export default async function ConceptPage({ params }: Props) {
           <nav className="text-sm text-text-sub mb-6">
             <Link href="/" className="hover:text-primary">홈</Link>
             <span className="mx-1.5">/</span>
-            <span>{categoryName}</span>
+            <Link href="/concept" className="hover:text-primary">개념 학습</Link>
+            {domain && (
+              <>
+                <span className="mx-1.5">/</span>
+                <Link href={`/concept#${domain.id}`} className="hover:text-primary">{domain.name}</Link>
+              </>
+            )}
             <span className="mx-1.5">/</span>
             <span className="text-text">{concept.title}</span>
           </nav>
 
-          <h1 className="text-3xl font-bold mb-2">{seoTitle}</h1>
+          {/* Header with badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {category && (
+              <span className="text-xs font-medium px-2 py-1 rounded bg-primary-light text-primary">
+                {category.name}
+              </span>
+            )}
+            {concept.difficulty && (
+              <span className="text-xs font-medium px-2 py-1 rounded bg-surface border border-border text-text-sub">
+                {DIFFICULTY_LABEL[concept.difficulty]}
+              </span>
+            )}
+            {concept.oracleSpecific && (
+              <span className="text-xs font-bold px-2 py-1 rounded bg-amber-50 text-amber-700">
+                Oracle 전용
+              </span>
+            )}
+          </div>
+
+          <h1 className="text-3xl font-bold mb-2">{concept.title}</h1>
           <p className="text-lg text-text-sub mb-8">{concept.shortDefinition}</p>
+
+          {/* 정의 (긴 정의가 있을 때) */}
+          {concept.definition && (
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold mb-3">정의</h2>
+              <div className="bg-surface border border-border rounded-lg p-5">
+                <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.definition}</p>
+              </div>
+            </section>
+          )}
 
           {/* Why Important */}
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">왜 중요한가?</h2>
-            <div className="bg-surface border border-border rounded-lg p-5">
-              <p className="text-text-sub">{concept.whyImportant}</p>
+            <div className="bg-primary-light/30 border border-primary/20 rounded-lg p-5">
+              <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.whyImportant}</p>
             </div>
           </section>
 
           {/* Common Mistakes */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-3">틀리기 쉬운 포인트</h2>
-            <ul className="space-y-2">
-              {concept.commonMistakes.map((m, i) => (
-                <li key={i} className="flex gap-2 bg-error/5 border border-error/20 rounded-lg p-4">
-                  <span className="text-error font-bold shrink-0">!</span>
-                  <p className="text-sm text-text-sub">{m}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {concept.commonMistakes.length > 0 && (
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold mb-3">틀리기 쉬운 포인트</h2>
+              <ul className="space-y-2">
+                {concept.commonMistakes.map((m, i) => (
+                  <li key={i} className="flex gap-2 bg-error/5 border border-error/20 rounded-lg p-4">
+                    <span className="text-error font-bold shrink-0">!</span>
+                    <p className="text-sm text-text-sub">{m}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Example */}
           {concept.example && (
             <section className="mb-8">
               <h2 className="text-xl font-semibold mb-3">예시</h2>
               <SqlBlock sql={concept.example} />
+            </section>
+          )}
+
+          {/* Performance Note */}
+          {concept.performanceNote && (
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold mb-3">성능 포인트</h2>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 flex gap-3">
+                <span className="text-amber-700 font-bold shrink-0">!</span>
+                <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.performanceNote}</p>
+              </div>
+            </section>
+          )}
+
+          {/* Related Concepts */}
+          {related.length > 0 && (
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold mb-3">관련 개념</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {related.map(r => (
+                  <Link
+                    key={r.tag}
+                    href={`/concept/${r.tag}`}
+                    className="block p-3 bg-surface border border-border rounded-lg hover:border-primary transition-colors"
+                  >
+                    <div className="font-medium text-text">{r.title}</div>
+                    <div className="text-xs text-text-muted mt-0.5 line-clamp-1">{r.shortDefinition}</div>
+                  </Link>
+                ))}
+              </div>
             </section>
           )}
 

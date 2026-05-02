@@ -10,8 +10,7 @@ const TOTAL_ACTIVE = ALL_PROBLEMS.filter(p => p.type !== 'write').length;
 
 const NAV_ITEMS = [
   { href: '/quiz/sql-basic', label: '문제풀이' },
-  { href: '/concept/select', label: '개념 학습' },
-  { href: '/terms', label: '용어 사전' },
+  { href: '/concept', label: '개념 학습' },
   { href: '/plan', label: '실행계획' },
   { href: '/diagram', label: '아키텍처' },
 ];
@@ -58,11 +57,9 @@ export default function Header() {
             >
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                  r.type === 'concept' ? 'bg-primary-light text-primary'
-                  : r.type === 'term' ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-amber-50 text-amber-700'
+                  r.type === 'concept' ? 'bg-primary-light text-primary' : 'bg-amber-50 text-amber-700'
                 }`}>
-                  {r.type === 'concept' ? '개념' : r.type === 'term' ? '용어' : '문제'}
+                  {r.type === 'concept' ? '개념' : '문제'}
                 </span>
                 <span className="text-sm font-medium">{r.title}</span>
               </div>

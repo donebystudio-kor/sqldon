@@ -3,7 +3,6 @@ import { SITE } from '@/constants/site';
 import { CATEGORIES } from '@/constants/categories';
 import { CONCEPTS } from '@/data/concepts';
 import { ALL_PROBLEMS } from '@/data/problems';
-import { ALL_DICTIONARY } from '@/data/dictionary';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = SITE.url;
@@ -11,7 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${base}/terms`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/concept`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${base}/diagram`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/plan`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/result`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
@@ -39,12 +38,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const dictionaryPages: MetadataRoute.Sitemap = ALL_DICTIONARY.map(e => ({
-    url: `${base}/terms/${e.slug}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: 0.8,
-  }));
-
-  return [...staticPages, ...categoryPages, ...problemPages, ...conceptPages, ...dictionaryPages];
+  return [...staticPages, ...categoryPages, ...problemPages, ...conceptPages];
 }

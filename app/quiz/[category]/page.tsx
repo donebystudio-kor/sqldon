@@ -68,7 +68,7 @@ export default async function QuizCategoryPage({ params, searchParams }: Props) 
 
   // Related concepts for this category
   const relatedConcepts = CONCEPTS.filter(c =>
-    c.relatedCategories.includes(category)
+    c.relatedCategories.includes(category as CategoryId)
   );
 
   // JSON-LD
