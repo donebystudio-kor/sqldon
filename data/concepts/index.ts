@@ -9,8 +9,8 @@ export const CONCEPTS: Concept[] = [
     difficulty: 'beginner',
     title: 'SELECT 문',
     shortDefinition: '데이터베이스에서 데이터를 조회하는 가장 기본적인 SQL 명령어',
-    definition: 'FROM 절의 테이블에서 SELECT 절에 명시한 컬럼을 추출한다. SQL 실행 순서는 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY 순으로, SELECT는 거의 마지막에 평가된다. 이 때문에 SELECT에서 만든 별칭(alias)을 WHERE에서는 사용할 수 없지만 ORDER BY에서는 사용할 수 있다.',
-    whyImportant: '모든 SQL 작업의 시작점. SELECT *를 습관적으로 쓰면 옵티마이저가 인덱스만으로 처리할 수 있는 쿼리도 테이블 액세스로 풀어버린다. 필요한 컬럼만 명시하는 것이 성능과 가독성의 기본기.',
+    definition: '테이블에서 원하는 컬럼을 골라 가져오는 SQL의 가장 기본 명령어. "SELECT 이름, 나이 FROM 직원" 이라고 쓰면 직원 테이블에서 이름과 나이만 뽑아온다. SQL 실행 순서상 FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY 순서로 처리되어 SELECT는 거의 마지막에 평가된다.',
+    whyImportant: '모든 SQL 작업의 시작점. SELECT *(별표)는 "모든 컬럼을 다 가져와"라는 뜻인데, 이렇게 습관적으로 쓰면 필요 없는 컬럼까지 읽혀서 쿼리가 느려지고 결과도 지저분해진다. 처음부터 필요한 컬럼만 골라 쓰는 습관이 중요하다.',
     commonMistakes: [
       'SELECT *를 습관적으로 사용하면 불필요한 컬럼까지 조회되어 성능 저하',
       'WHERE 절 없이 대용량 테이블 조회 시 전체 스캔 발생',
@@ -20,6 +20,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'SELECT *는 인덱스 커버링(index-only scan)을 막는다. 필요한 컬럼만 명시하라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['where', 'order-by', 'distinct'],
+    aliases: ['SELECT'],
   },
   {
     tag: 'where',
@@ -27,9 +28,9 @@ export const CONCEPTS: Concept[] = [
     category: 'basic',
     difficulty: 'beginner',
     title: 'WHERE 조건',
-    shortDefinition: 'FROM으로 지정한 테이블에서 조건에 맞는 행만 골라내는 필터링 절',
-    definition: 'FROM의 모든 행을 한 번씩 훑어 조건을 평가하고, TRUE인 행만 다음 단계로 넘긴다. WHERE에서 인덱스 활용 가능 여부가 SQL 성능을 결정한다. 컬럼에 함수/연산을 씌우거나 묵시적 형변환이 일어나면 인덱스가 막힌다.',
-    whyImportant: 'WHERE가 없으면 테이블 전체를 읽는다. 대용량 테이블에서 WHERE 없이 조회하면 불필요한 I/O가 발생하고, 인덱스도 활용할 수 없다. WHERE 조건이 인덱스를 탈 수 있는지가 SQL 성능의 핵심이다.',
+    shortDefinition: '테이블에서 조건에 맞는 행만 골라내는 필터링 절',
+    definition: '테이블의 행 중에서 원하는 조건에 맞는 것만 골라낸다. 예를 들어 "WHERE 나이 > 30"이라고 쓰면 30살 넘는 사람만 결과로 나온다. WHERE가 없으면 테이블의 모든 행이 결과로 나오기 때문에, 데이터가 많을수록 WHERE는 필수다.',
+    whyImportant: 'WHERE가 없으면 테이블 전체가 결과로 나와서 매우 느려진다. 또 WHERE를 잘못 쓰면 의도한 결과가 안 나오거나(NULL 비교 실수 등) 데이터베이스가 인덱스를 활용하지 못해 느려진다. SQL 성능의 핵심이 WHERE라고 해도 과언이 아니다.',
     commonMistakes: [
       'WHERE 절에 함수를 씌우면 인덱스를 무력화합니다. WHERE TO_CHAR(date_col) = \'2024\' 대신 WHERE date_col >= TO_DATE(\'2024-01-01\')으로 작성해야 인덱스를 탑니다.',
       'NULL은 = 로 비교할 수 없습니다. WHERE status = NULL은 항상 결과가 비어있습니다. IS NULL을 사용해야 합니다.',
@@ -39,6 +40,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '인덱스 컬럼을 SARGable하게 유지하라. 좌변에 함수/연산을 두지 말고, 묵시적 형변환을 피하기 위해 데이터 타입을 일치시켜라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['null-handling', 'index'],
+    aliases: ['WHERE'],
   },
   {
     tag: 'order-by',
@@ -46,9 +48,9 @@ export const CONCEPTS: Concept[] = [
     category: 'basic',
     difficulty: 'beginner',
     title: 'ORDER BY 정렬',
-    shortDefinition: '조회 결과의 행 순서를 특정 컬럼 기준으로 정렬하는 절',
-    definition: 'SELECT가 만든 결과 집합을 지정한 컬럼 기준으로 정렬한다. SQL 실행 순서상 SELECT 다음, 거의 마지막에 실행된다. 인덱스의 정렬 순서와 ORDER BY가 일치하면 옵티마이저가 정렬 작업을 생략할 수 있다(WINDOW NOSORT, INDEX FULL SCAN).',
-    whyImportant: 'ORDER BY가 없으면 SQL 결과의 순서는 보장되지 않는다. 같은 쿼리를 두 번 실행해도 다른 순서로 나올 수 있다. 정렬은 추가 메모리(PGA)와 CPU를 사용하므로, 불필요한 정렬은 성능에 영향을 준다.',
+    shortDefinition: '조회 결과를 특정 컬럼 기준으로 정렬하는 절',
+    definition: '결과를 지정한 컬럼 기준으로 정렬해서 보여준다. "ORDER BY 나이 DESC"라고 쓰면 나이 많은 순(내림차순)으로 정렬된다. ASC는 오름차순(기본값), DESC는 내림차순. 여러 컬럼을 콤마로 이어 쓰면 1순위→2순위 순서로 정렬한다.',
+    whyImportant: 'ORDER BY가 없으면 결과의 순서가 보장되지 않는다. 같은 쿼리를 두 번 실행해도 매번 순서가 다르게 나올 수 있다. 사용자에게 보여주는 결과는 항상 의도한 순서로 나오도록 ORDER BY를 명시해야 한다.',
     commonMistakes: [
       '기본 정렬 방향은 ASC(오름차순)입니다. DESC를 써야 내림차순. 날짜를 최신 순으로 보려면 반드시 DESC를 명시해야 합니다.',
       'ORDER BY는 SQL 실행 순서에서 가장 마지막에 실행됩니다. SELECT에서 정의한 별칭(alias)을 ORDER BY에서 사용할 수 있는 이유가 이것입니다.',
@@ -58,6 +60,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '인덱스의 정렬 순서와 일치하면 SORT 작업이 생략된다. PGA가 부족하면 Disk Sort로 떨어져 성능이 급락.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['index'],
+    aliases: ['ORDER BY'],
   },
   {
     tag: 'distinct',
@@ -65,9 +68,9 @@ export const CONCEPTS: Concept[] = [
     category: 'basic',
     difficulty: 'beginner',
     title: 'DISTINCT 중복 제거',
-    shortDefinition: 'SELECT 결과에서 완전히 동일한 행을 제거하고 고유한 행만 반환하는 키워드',
-    definition: 'SELECT 절의 모든 컬럼 조합을 기준으로 중복된 행을 제거한다. 옵티마이저는 정렬 기반(SORT UNIQUE)이나 해시 기반(HASH UNIQUE)으로 처리한다. 둘 다 추가 메모리와 CPU를 소비하므로 비싸다.',
-    whyImportant: '중복 데이터를 제거해야 할 때 사용한다. 단, DISTINCT는 결과 전체를 정렬하거나 해시해야 하므로 대용량 데이터에서는 성능 비용이 크다. GROUP BY로 대체할 수 있는 경우가 많다.',
+    shortDefinition: '결과에서 중복된 행을 제거하고 고유한 행만 반환하는 키워드',
+    definition: '결과 중에 똑같은 행이 여러 번 나올 때 한 번씩만 보여준다. "SELECT DISTINCT 부서" 라고 하면 부서 목록을 한 번씩만 가져온다. 중복 판단은 SELECT에 적은 모든 컬럼 조합을 기준으로 한다.',
+    whyImportant: '중복된 결과를 제거할 때 쓰지만 남용하면 안 된다. 데이터가 많으면 모든 행을 비교해야 하므로 느려지고, 사실 JOIN 조건이 잘못되어 중복이 생긴 걸 DISTINCT로 가리는 경우가 많다. 중복의 원인을 먼저 찾는 게 우선이다.',
     commonMistakes: [
       'DISTINCT는 특정 컬럼 하나가 아닌 SELECT의 모든 컬럼 조합 기준으로 중복을 제거합니다. SELECT DISTINCT name, dept_id는 (name, dept_id) 쌍이 동일한 행만 제거합니다.',
       'COUNT(DISTINCT 컬럼)과 COUNT(컬럼)은 다릅니다. 전자는 고유 값 수, 후자는 NULL이 아닌 전체 행 수입니다.',
@@ -77,6 +80,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'DISTINCT 남용은 JOIN 키 누락의 신호일 수 있다. 원인을 찾아 JOIN을 고치는 것이 우선.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['count', 'group-by'],
+    aliases: ['DISTINCT'],
   },
   {
     tag: 'null-handling',
@@ -85,8 +89,8 @@ export const CONCEPTS: Concept[] = [
     difficulty: 'beginner',
     title: 'NULL 처리',
     shortDefinition: 'SQL에서 NULL은 "값이 없음"을 의미하며, 일반적인 비교 연산과 다른 규칙이 적용된다',
-    definition: 'NULL은 0이나 빈 문자열이 아니라 "알 수 없음(unknown)"을 의미한다. NULL과의 모든 비교는 UNKNOWN을 반환하며, IS NULL/IS NOT NULL로만 판단할 수 있다. 오라클의 B-tree 인덱스는 NULL을 저장하지 않으므로 IS NULL 조건은 인덱스를 못 탄다(함수 기반 인덱스로 우회 가능).',
-    whyImportant: '집계 함수는 NULL을 자동 제외한다. COUNT(*)와 COUNT(컬럼)의 결과가 다른 이유. 비즈니스 의미를 모르고 NULL을 0으로 취급하면 통계가 어긋난다.',
+    definition: 'NULL은 "값이 없다"는 뜻으로, 0이나 빈 문자열과는 완전히 다르다. 예를 들어 전화번호를 모르는 고객의 phone 컬럼은 NULL이다. NULL을 비교할 때는 = 가 아닌 IS NULL / IS NOT NULL을 써야 한다. WHERE phone = NULL은 절대 결과가 안 나온다.',
+    whyImportant: 'NULL은 SQL에서 가장 흔한 실수의 원인. = 로 비교하면 결과가 항상 비어버리고, 합계/평균 같은 계산에서도 NULL은 자동으로 제외된다. NULL을 0으로 취급하면 통계가 어긋날 수 있어 의미를 정확히 알아야 한다.',
     commonMistakes: [
       'WHERE col = NULL은 항상 결과가 비어있습니다. NULL = NULL도 TRUE가 아니라 UNKNOWN입니다. 반드시 IS NULL을 사용하세요.',
       'AVG, SUM 등 집계 함수는 NULL을 무시합니다. 10, NULL, 30의 AVG는 (10+30)/2 = 20이지, (10+0+30)/3이 아닙니다.',
@@ -96,6 +100,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'B-tree 인덱스는 NULL 미저장. IS NULL이 자주 쓰이면 함수 기반 인덱스를 검토하라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['coalesce', 'nvl', 'nullif'],
+    aliases: ['NULL', 'IS NULL', 'NULL 처리'],
   },
 
   // ===== JOIN =====
@@ -106,8 +111,8 @@ export const CONCEPTS: Concept[] = [
     difficulty: 'beginner',
     title: 'INNER JOIN',
     shortDefinition: '두 테이블 모두에 매칭되는 행만 반환하는 가장 기본적인 조인',
-    definition: '두 테이블에서 ON 조건을 만족하는 행만 결과로 반환한다. 한쪽에만 존재하는 행은 결과에서 제외된다. JOIN 키워드만 쓰면 기본값이 INNER다. 옵티마이저는 NL Join, Hash Join, Sort Merge Join 중 통계 정보와 행 수에 따라 선택하며, 양쪽 모두 일치 행만 추출하므로 카디널리티 추정이 비교적 정확한 편이다.',
-    whyImportant: 'JOIN 중 가장 자주 쓰이지만, "한쪽에만 있는 데이터가 사라진다"는 사실을 놓치면 데이터 누락 버그가 생긴다. 신규 부서에 직원이 없으면 그 부서는 결과에서 빠지고, 이를 모르고 리포트를 만들면 통계가 어긋난다.',
+    definition: '두 테이블을 연결해서 양쪽에 모두 있는 행만 결과로 가져온다. 예를 들어 직원 테이블과 부서 테이블을 dept_id 기준으로 INNER JOIN하면, 부서가 정해진 직원만 결과에 나온다. 부서 없이 비어있는 직원이나 직원이 없는 빈 부서는 결과에서 빠진다. JOIN 키워드만 써도 기본값이 INNER다.',
+    whyImportant: 'JOIN 중 가장 흔하지만 "한쪽에만 있는 데이터는 결과에서 사라진다"는 점을 놓치면 데이터가 누락되는 버그가 생긴다. 직원이 한 명도 없는 신규 부서로 리포트를 만들면 그 부서는 통계에 잡히지 않는다.',
     commonMistakes: [
       'INNER JOIN은 양쪽 모두 매칭되어야 반환됩니다. 한쪽에만 있는 데이터는 사라집니다.',
       'JOIN과 INNER JOIN은 동일합니다. INNER는 기본값이라 생략 가능하지만, 의도를 명확히 하기 위해 명시하는 것을 권장합니다.',
@@ -117,6 +122,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '조인 키에 인덱스가 있으면 NL Join이, 양쪽이 큰 테이블이면 Hash Join이 유리. ON 절 양쪽에 함수를 씌우면 인덱스 활용이 막혀 Full Scan + Hash Join으로 풀린다.',
     relatedCategories: ['sql-join'],
     relatedConcepts: ['left-outer-join', 'cross-join', 'self-join'],
+    aliases: ['INNER JOIN', '내부 조인'],
   },
   {
     tag: 'left-outer-join',
@@ -124,9 +130,9 @@ export const CONCEPTS: Concept[] = [
     category: 'join',
     difficulty: 'beginner',
     title: 'LEFT OUTER JOIN',
-    shortDefinition: '왼쪽 테이블의 모든 행을 보존하면서 오른쪽 테이블을 매칭',
-    definition: '왼쪽(FROM 절) 테이블의 모든 행을 결과에 포함하고, 오른쪽 테이블에서 매칭되는 행이 없으면 NULL로 채운다. OUTER 키워드는 생략 가능하다. 오라클에서는 (+) 기호로도 표현 가능하지만, ANSI 표준 문법인 LEFT JOIN을 사용하는 것이 가독성과 이식성 측면에서 바람직하다. RIGHT JOIN은 테이블 순서만 다르며 보통 LEFT JOIN으로 통일해 쓰는 것이 가독성에 좋다.',
-    whyImportant: '"매칭이 없어도 기준 테이블 행은 유지" 가 핵심. 주문이 없는 고객도 보고 싶을 때 필수. 흔한 함정: WHERE 절에 오른쪽 테이블 조건을 걸면 NULL 행이 모두 제거되어 INNER JOIN과 같아진다. 오른쪽 조건은 ON 절에 넣어야 한다.',
+    shortDefinition: '왼쪽 테이블의 모든 행을 유지하면서 오른쪽 테이블을 연결',
+    definition: '왼쪽(먼저 쓴) 테이블의 모든 행은 결과에 다 포함시키고, 오른쪽 테이블에서 매칭되는 게 없으면 NULL로 채운다. 예를 들어 고객 LEFT JOIN 주문이라고 하면, 주문을 한 번도 안 한 고객도 결과에 나오고 그 고객의 주문 정보 자리는 NULL로 비어있다. OUTER는 생략 가능. RIGHT JOIN은 방향만 다르므로 보통 LEFT JOIN으로 통일해서 쓴다.',
+    whyImportant: '"매칭이 없어도 기준 테이블 행은 보여주고 싶을 때" 쓴다. 주문 안 한 고객도 보고 싶거나, 강의를 안 들은 학생도 명단에 넣고 싶을 때 필수. 흔한 실수는 WHERE 절에 오른쪽 테이블 조건을 거는 것 — 이렇게 하면 NULL 행이 다 제거되어 결국 INNER JOIN과 같아진다.',
     commonMistakes: [
       'LEFT JOIN 후 WHERE에서 오른쪽 테이블 컬럼을 조건으로 걸면 NULL 행이 제거되어 INNER JOIN과 같아집니다. 오른쪽 테이블 조건은 ON 절에 넣어야 LEFT JOIN 효과가 유지됩니다.',
       'LEFT JOIN과 RIGHT JOIN은 테이블 순서만 다릅니다. A LEFT JOIN B는 B RIGHT JOIN A와 동일합니다. 실무에서는 LEFT JOIN만 사용하는 것이 가독성에 좋습니다.',
@@ -136,6 +142,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'LEFT JOIN은 NULL 처리 비용이 추가되고, 옵티마이저의 조인 순서 변경이 INNER JOIN보다 제한적이다. 가능하면 INNER JOIN을 우선 검토하라.',
     relatedCategories: ['sql-join'],
     relatedConcepts: ['inner-join', 'cross-join', 'coalesce'],
+    aliases: ['LEFT JOIN', 'LEFT OUTER JOIN', 'OUTER JOIN', 'RIGHT JOIN', '외부 조인'],
   },
   {
     tag: 'cross-join',
@@ -143,9 +150,9 @@ export const CONCEPTS: Concept[] = [
     category: 'join',
     difficulty: 'beginner',
     title: 'CROSS JOIN',
-    shortDefinition: '두 테이블의 모든 행 조합(카테시안 곱)을 만드는 조인',
-    definition: 'ON 조건 없이 두 테이블의 모든 행을 조합한다. 결과 행 수는 A행수 × B행수가 된다. 의도적으로 사용하는 경우(달력 × 부서 같은 매트릭스 생성)가 아니라면 대부분 ON 절을 빠뜨린 실수다. 옵티마이저는 의도치 않은 카테시안 곱을 경고하지 않으므로, 행 수 폭증으로 메모리/디스크가 부족해지기 전까지 알아채기 어렵다.',
-    whyImportant: '실무에서 보통 "JOIN 했는데 결과가 너무 많다"는 증상의 원인. 다중 테이블 JOIN에서 조인 조건 하나만 빠져도 그 테이블이 카테시안 곱처럼 동작한다.',
+    shortDefinition: '두 테이블의 모든 행을 모든 경우의 수로 조합하는 조인',
+    definition: '연결 조건 없이 두 테이블의 모든 행을 가능한 모든 조합으로 만든다. 결과 행 수는 A행수 × B행수가 된다. 카드 게임의 모든 카드 조합처럼, 한 쪽의 모든 행이 반대쪽의 모든 행과 짝지어진다. 의도적으로 쓰는 경우(달력 × 부서로 매트릭스 만들기)도 있지만, 대부분은 JOIN 조건을 빠뜨린 실수다.',
+    whyImportant: '"JOIN 했는데 결과가 이상하게 많이 나온다"의 원인. 여러 테이블을 JOIN할 때 조인 조건 하나만 빠뜨려도 그 테이블이 모든 경우의 수로 곱해져서 결과가 폭증한다. 1만 × 1만 = 1억 행이 한순간에 만들어질 수 있다.',
     commonMistakes: [
       'ON 조건이 빠진 JOIN은 자동으로 CROSS JOIN이 됩니다. 옵티마이저는 경고하지 않습니다.',
       '의도된 CROSS JOIN은 명시적으로 CROSS JOIN 키워드를 쓰는 것이 가독성에 좋습니다.',
@@ -155,6 +162,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '결과 행 수가 곱으로 늘어나므로 1만 × 1만 = 1억. 의도치 않은 CROSS JOIN은 즉시 OOM/Temp 폭증으로 이어진다.',
     relatedCategories: ['sql-join'],
     relatedConcepts: ['inner-join', 'self-join'],
+    aliases: ['CROSS JOIN', '카테시안', '카테시안 곱', '교차 조인'],
   },
   {
     tag: 'self-join',
@@ -174,6 +182,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '같은 테이블을 두 번 읽으므로 인덱스가 없으면 Full Scan이 두 번 발생할 수 있다. manager_id에 인덱스 필수.',
     relatedCategories: ['sql-join'],
     relatedConcepts: ['inner-join', 'cte'],
+    aliases: ['SELF JOIN', '셀프 조인'],
   },
 
   // ===== 집계 =====
@@ -183,9 +192,9 @@ export const CONCEPTS: Concept[] = [
     category: 'aggregate',
     difficulty: 'beginner',
     title: 'GROUP BY',
-    shortDefinition: '특정 컬럼 기준으로 행을 그룹화하여 집계 함수를 적용',
-    definition: '지정한 컬럼 값이 같은 행들을 하나의 그룹으로 묶고, 각 그룹에 집계 함수(COUNT, SUM, AVG 등)를 적용한다. SELECT 절의 비집계 컬럼은 반드시 GROUP BY에 포함해야 한다(MySQL 일부 모드 제외). 오라클 옵티마이저는 정렬 기반 그룹화(SORT GROUP BY)와 해시 기반 그룹화(HASH GROUP BY) 중 통계와 메모리 상황에 따라 선택한다.',
-    whyImportant: '리포트와 분석의 출발점. 부서별 인원수, 월별 매출 등 요약 통계는 모두 GROUP BY에서 시작한다. SELECT 절에 GROUP BY에 없는 비집계 컬럼이 들어가면 오라클은 ORA-00979 에러로 거부한다.',
+    shortDefinition: '특정 컬럼 값이 같은 행들을 묶어서 통계를 내는 절',
+    definition: '같은 값을 가진 행들을 하나의 그룹으로 묶고, 그룹별로 COUNT, SUM, AVG 같은 집계 함수를 적용한다. 예: "GROUP BY dept_id" 하면 부서별로 묶이고, 거기에 COUNT(*)을 쓰면 부서별 인원수가 나온다. SELECT에 적은 컬럼 중 집계 함수가 아닌 컬럼은 모두 GROUP BY에 들어가야 한다.',
+    whyImportant: '리포트와 통계의 출발점. 부서별 인원수, 월별 매출, 카테고리별 판매량 같은 모든 요약 통계는 GROUP BY로 시작한다. 일반 컬럼을 GROUP BY에 안 넣고 SELECT에 적으면 오라클은 에러(ORA-00979)를 낸다.',
     commonMistakes: [
       'SELECT에 집계 함수와 일반 컬럼을 혼용할 때 GROUP BY에 일반 컬럼을 빠뜨림 (ORA-00979)',
       'WHERE와 HAVING을 혼동하여 그룹 조건을 WHERE에 작성',
@@ -195,6 +204,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'GROUP BY 컬럼이 인덱스의 선두 컬럼과 일치하면 정렬 비용 없이 처리될 수 있다. PGA가 부족하면 Disk Sort로 떨어져 성능이 급락한다.',
     relatedCategories: ['sql-aggregate'],
     relatedConcepts: ['having', 'count', 'sum', 'avg'],
+    aliases: ['GROUP BY', '그룹화'],
   },
   {
     tag: 'having',
@@ -202,9 +212,9 @@ export const CONCEPTS: Concept[] = [
     category: 'aggregate',
     difficulty: 'beginner',
     title: 'HAVING',
-    shortDefinition: 'GROUP BY로 만든 그룹에 조건을 적용하는 절',
-    definition: 'GROUP BY로 그룹화된 결과에 대해 필터링을 수행한다. WHERE는 그룹화 전 행을 거르고, HAVING은 그룹화 후 그룹을 거른다. WHERE 절에는 집계 함수를 쓸 수 없으며, 집계 결과로 필터링하려면 반드시 HAVING을 써야 한다. SQL 실행 순서상 HAVING은 GROUP BY 이후, ORDER BY 이전에 평가된다.',
-    whyImportant: '"3건 이상 주문한 고객만" 같은 조건은 HAVING의 영역. WHERE에 COUNT(*) > 3을 쓰면 ORA-00934로 거부된다. 반대로 행 단위 필터를 HAVING에 쓰면 그룹화 후에 거르기 때문에 불필요한 집계 비용이 발생한다.',
+    shortDefinition: 'GROUP BY로 묶은 그룹에 조건을 거는 절',
+    definition: 'GROUP BY로 그룹을 만든 다음, 그 그룹에 조건을 걸어 거른다. WHERE는 묶기 전의 행을 거르고, HAVING은 묶은 후의 그룹을 거른다. 예: "HAVING COUNT(*) >= 3" 이라고 하면 인원이 3명 이상인 부서만 결과에 나온다. WHERE에는 COUNT 같은 집계 함수를 못 쓰고, 그룹 단위 조건은 모두 HAVING에 써야 한다.',
+    whyImportant: '"3번 이상 주문한 고객만 보기" 같은 조건은 HAVING의 영역. WHERE에 COUNT(*) > 3을 쓰면 에러(ORA-00934)가 난다. WHERE는 행 하나하나의 조건, HAVING은 묶인 그룹의 조건 — 이 차이가 GROUP BY를 쓸 때 가장 흔한 헷갈림이다.',
     commonMistakes: [
       'WHERE에 집계 함수를 쓰면 오류가 발생합니다. WHERE COUNT(*) > 3은 안 되고, HAVING COUNT(*) > 3으로 써야 합니다.',
       'HAVING은 GROUP BY 없이도 사용 가능하지만, 이 경우 전체 테이블이 하나의 그룹이 됩니다.',
@@ -214,6 +224,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '행 단위 조건은 WHERE에 두어 그룹화 대상을 먼저 줄여라. HAVING은 그룹 단위 조건 전용으로 한정하면 집계 비용이 줄어든다.',
     relatedCategories: ['sql-aggregate'],
     relatedConcepts: ['group-by', 'count'],
+    aliases: ['HAVING'],
   },
 
   // ===== 집합 연산 =====
@@ -223,9 +234,9 @@ export const CONCEPTS: Concept[] = [
     category: 'set',
     difficulty: 'beginner',
     title: 'UNION ALL',
-    shortDefinition: '두 결과 집합을 단순 결합 (중복 제거 안 함)',
-    definition: '두 SELECT의 결과를 그대로 이어 붙인다. 중복 행을 제거하지 않으며, 결과 행 수는 양쪽 행 수의 합이다. UNION(중복 제거)과 달리 별도 정렬/해시 작업이 없으므로 성능이 훨씬 빠르다. 컬럼 수와 데이터 타입이 양쪽이 일치해야 한다.',
-    whyImportant: '실무에서 거의 모든 케이스에 UNION ALL이 정답이다. UNION을 습관적으로 쓰면 중복 제거 비용(Sort Unique)을 매번 지불하게 된다. 중복이 발생할 수 없는 경우(연도별 분할 테이블 결합 등)에는 반드시 UNION ALL을 사용하라.',
+    shortDefinition: '두 SELECT 결과를 그대로 이어 붙이는 연산 (중복 제거 안 함)',
+    definition: '두 SELECT의 결과를 위아래로 이어 붙인다. 중복된 행이 있어도 그대로 둔다. 컬럼 수와 데이터 타입이 양쪽이 같아야 한다. 비교 대상인 UNION은 중복을 제거하지만, 그 과정에서 정렬·비교 작업이 추가로 일어나 더 느리다.',
+    whyImportant: '실무에서는 대부분의 경우 UNION ALL이 정답이다. UNION을 습관적으로 쓰면 매번 중복 제거 작업이 들어가서 느려진다. 중복이 안 생긴다는 게 확실하면(예: 2024년 데이터 + 2025년 데이터) 반드시 UNION ALL을 쓰자.',
     commonMistakes: [
       'UNION은 중복을 제거하지만 정렬/해시 비용이 큽니다. UNION ALL이 기본값이 되어야 합니다.',
       '컬럼 수와 데이터 타입이 양쪽이 일치해야 합니다. 다르면 묵시적 형변환이나 오류.',
@@ -235,6 +246,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'UNION은 정렬 후 중복 제거를 위해 PGA 메모리/Temp 공간을 사용한다. UNION ALL은 그런 비용이 없다. 의식적으로 ALL을 붙여라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['exists'],
+    aliases: ['UNION ALL', 'UNION'],
   },
 
   // ===== 서브쿼리 =====
@@ -256,6 +268,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'EXISTS는 Semi Join으로 풀려 첫 매칭에서 종료. NOT IN은 NULL 처리 의미 차이로 안티 조인 최적화가 막힐 수 있어 NOT EXISTS 권장.',
     relatedCategories: ['sql-subquery'],
     relatedConcepts: ['cte', 'inner-join'],
+    aliases: ['EXISTS', 'NOT EXISTS'],
   },
   {
     tag: 'cte',
@@ -275,6 +288,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '오라클은 CTE를 기본 인라인. /*+ MATERIALIZE */ 힌트로 임시 결과를 강제 캐시할 수 있다. 무거운 CTE를 여러 번 참조한다면 MATERIALIZE를 검토하라.',
     relatedCategories: ['sql-advanced'],
     relatedConcepts: ['exists', 'self-join'],
+    aliases: ['CTE', 'WITH 절', 'Common Table Expression'],
   },
 
   // ===== 윈도우 함수 =====
@@ -296,6 +310,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'PARTITION BY/ORDER BY 컬럼이 인덱스의 선두와 일치하면 정렬 비용이 줄어든다(WINDOW NOSORT).',
     relatedCategories: ['sql-window'],
     relatedConcepts: ['partition-by', 'row-number', 'rank', 'lag'],
+    aliases: ['윈도우 함수', '분석 함수', 'OVER'],
   },
   {
     tag: 'partition-by',
@@ -314,6 +329,7 @@ export const CONCEPTS: Concept[] = [
     example: "SELECT name, department_id, salary, SUM(salary) OVER(PARTITION BY department_id) AS dept_total FROM employees;",
     relatedCategories: ['sql-window'],
     relatedConcepts: ['window-function', 'row-number', 'rank'],
+    aliases: ['PARTITION BY'],
   },
 
   // ===== 인덱스/객체 =====
@@ -335,6 +351,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'WHERE 컬럼에 함수를 씌우면 인덱스 무력화. 함수 기반 인덱스를 만들거나 조건을 변형해야 한다.',
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['composite-index', 'index-range-scan', 'full-table-scan'],
+    aliases: ['인덱스', 'INDEX', 'B-tree', 'B-tree 인덱스'],
   },
   {
     tag: 'composite-index',
@@ -354,6 +371,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '범위 조건 컬럼 이후의 인덱스 컬럼은 정렬 효과가 사라진다. = 조건 컬럼을 앞에, 범위/정렬 컬럼을 뒤에 배치하라.',
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['index', 'index-range-scan'],
+    aliases: ['복합 인덱스', 'COMPOSITE INDEX'],
   },
 
   // ===== 설계 =====
@@ -376,6 +394,70 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['index'],
+    aliases: ['파티셔닝', '파티션', 'PARTITION'],
+  },
+
+  // ===== 옵티마이저 개념 =====
+  {
+    tag: 'optimizer',
+    domain: 'sql',
+    category: 'optimizer',
+    difficulty: 'intermediate',
+    title: '옵티마이저 (Optimizer)',
+    shortDefinition: 'SQL을 어떤 순서로 어떻게 실행할지 결정하는 데이터베이스의 엔진',
+    definition: 'SQL을 받으면 옵티마이저가 "이걸 어떻게 실행하면 가장 빠를까"를 계산해 실행계획을 만든다. 같은 결과를 내는 SQL이라도 처리 방식은 여러 가지가 있는데(인덱스를 쓸지, 어떤 조인 방식을 쓸지, 어느 테이블을 먼저 읽을지 등), 그중 가장 비용이 적게 드는 방식을 옵티마이저가 선택한다. 오라클은 비용 기반 옵티마이저(CBO, Cost-Based Optimizer)를 사용하며, 통계 정보를 기반으로 비용을 추정한다.',
+    whyImportant: 'SQL 튜닝은 결국 옵티마이저가 좋은 실행계획을 고르도록 돕는 일. 통계가 부정확하거나, 컬럼에 함수를 씌우거나, 데이터 분포가 편향되면 옵티마이저가 잘못된 계획을 선택해 SQL이 느려진다. 통계 정보 갱신과 SARGable 조건 작성이 옵티마이저를 돕는 기본기.',
+    commonMistakes: [
+      '통계 정보가 오래되면 옵티마이저가 잘못된 계획을 선택할 수 있습니다.',
+      'WHERE 컬럼에 함수를 씌우면 옵티마이저가 인덱스를 활용하지 못합니다.',
+      '힌트 남용은 옵티마이저의 자율성을 깨뜨려 통계 변화에 적응하지 못하게 만듭니다.',
+    ],
+    example: '-- 통계 정보 갱신 (테이블 단위)\nEXEC DBMS_STATS.GATHER_TABLE_STATS(\'SCHEMA_NAME\', \'TABLE_NAME\');\n\n-- 옵티마이저 모드 확인\nSHOW PARAMETER optimizer_mode;',
+    performanceNote: '느린 SQL의 70% 이상은 옵티마이저가 실수해서 발생한다. 가장 흔한 원인은 통계 부정확. DBMS_STATS로 정기 갱신하라.',
+    oracleSpecific: true,
+    relatedCategories: ['sql-tuning'],
+    relatedConcepts: ['execution-plan', 'cardinality', 'selectivity', 'hard-parse'],
+    aliases: ['옵티마이저', 'CBO', 'Cost-Based Optimizer'],
+  },
+  {
+    tag: 'cardinality',
+    domain: 'sql',
+    category: 'optimizer',
+    difficulty: 'intermediate',
+    title: '카디널리티 (Cardinality)',
+    shortDefinition: '컬럼의 고유 값 개수 또는 SQL 단계의 결과 행 수',
+    definition: '두 가지 의미로 쓰인다. (1) 컬럼 카디널리티: 그 컬럼에 들어있는 고유 값의 개수. 예를 들어 "성별" 컬럼은 (남, 여, NULL) 3개 정도라 카디널리티가 낮고, "주민번호"는 사람마다 달라서 카디널리티가 높다. (2) 실행계획 카디널리티: 옵티마이저가 추정한 각 단계의 결과 행 수. 실제 행 수와 다르면 옵티마이저가 잘못된 계획을 선택할 수 있다.',
+    whyImportant: '카디널리티가 높은 컬럼(고유 값이 많음)은 인덱스 효과가 크고, 낮은 컬럼은 인덱스를 만들어도 거의 효과가 없다. 성별·등급 같은 컬럼에 인덱스를 만들어봐야 결국 절반 이상의 행을 읽게 되어 Full Scan과 다를 게 없기 때문. 인덱스 설계의 첫 판단 기준이다.',
+    commonMistakes: [
+      '카디널리티가 낮은 컬럼(성별, 사용/미사용 플래그 등)에 일반 B-tree 인덱스를 만들면 효과 미미.',
+      '실행계획의 추정 카디널리티가 실제와 크게 다르면 옵티마이저가 잘못된 계획을 선택합니다.',
+      '데이터 분포가 편향된 경우(99%가 같은 값) 단순 카디널리티만으로 판단하면 안 됩니다.',
+    ],
+    example: '-- 컬럼별 카디널리티 확인\nSELECT COUNT(DISTINCT gender) AS gender_card,\n       COUNT(DISTINCT email) AS email_card,\n       COUNT(*) AS total\nFROM users;\n\n-- 결과: gender_card=2, email_card=10000, total=10000\n-- gender는 카디널리티 매우 낮음 → 인덱스 비효율',
+    performanceNote: '카디널리티가 낮은 컬럼엔 BITMAP 인덱스가 적합(데이터 웨어하우스). OLTP에선 Bitmap 부적합 — 그냥 인덱스를 안 만드는 게 정답일 때가 많다.',
+    relatedCategories: ['sql-tuning'],
+    relatedConcepts: ['index', 'composite-index', 'selectivity', 'optimizer'],
+    aliases: ['카디널리티', 'Cardinality'],
+  },
+  {
+    tag: 'selectivity',
+    domain: 'sql',
+    category: 'optimizer',
+    difficulty: 'intermediate',
+    title: '선택도 (Selectivity)',
+    shortDefinition: 'WHERE 조건이 전체 행 중 결과로 골라낼 비율 (0~1)',
+    definition: '특정 조건이 결과를 얼마나 좁히는지를 0과 1 사이의 값으로 표현한 것. 예를 들어 1만 명 중 100명이 통과하는 조건이면 선택도는 0.01(1%). 선택도가 낮을수록(=결과가 적을수록) 인덱스가 효과적이고, 선택도가 높을수록(=결과가 많을수록) Full Scan이 더 빠를 수 있다. 카디널리티의 역수와 비슷한 개념.',
+    whyImportant: '옵티마이저는 선택도를 보고 인덱스를 쓸지 Full Scan을 할지 결정한다. WHERE 조건의 선택도가 5~10% 이상이면 보통 Full Scan이 더 빠르다. 인덱스가 있다고 무조건 빠른 게 아니라는 의미. 인덱스 설계 시 "이 조건이 정말 선택적인가?"를 따져봐야 한다.',
+    commonMistakes: [
+      '선택도가 높은 조건(결과가 많은 조건)에 인덱스를 만들어도 효과가 없습니다.',
+      '복합 조건의 선택도는 각 조건 선택도의 곱이 아닙니다(컬럼 간 상관관계).',
+      '선택도와 카디널리티를 혼동하지 마세요 — 선택도는 비율, 카디널리티는 개수.',
+    ],
+    example: '-- 조건의 선택도 추정\n-- WHERE status = \'ACTIVE\' (전체의 80%) → 선택도 0.8 → Full Scan 유리\n-- WHERE id = 12345 (전체의 0.001%) → 선택도 0.00001 → 인덱스 매우 유리',
+    performanceNote: '선택도 5~10%가 대략적인 인덱스/Full Scan 분기점. 더 정확한 값은 행 크기, 블록 크기, Clustering Factor 등에 따라 달라진다.',
+    relatedCategories: ['sql-tuning'],
+    relatedConcepts: ['cardinality', 'index', 'optimizer', 'full-table-scan'],
+    aliases: ['선택도', 'Selectivity'],
   },
 
   // ===== 튜닝 =====
@@ -397,6 +479,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '소량 테이블이나 대량 비율 조회는 Full Scan이 더 효율적. 무조건 인덱스를 강제하지 마라.',
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['index', 'index-range-scan', 'execution-plan'],
+    aliases: ['Full Scan', 'FULL SCAN', 'TABLE ACCESS FULL', '전체 테이블 스캔'],
   },
   {
     tag: 'index-range-scan',
@@ -416,6 +499,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '인덱스 → 테이블 ROWID 액세스 비용을 잊지 마라. 대량 결과에서는 Full Scan이 더 빠를 수 있다.',
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['index', 'composite-index', 'full-table-scan', 'execution-plan'],
+    aliases: ['Range Scan', 'INDEX RANGE SCAN'],
   },
 
   // ===== SQL 함수 - 집계 =====
@@ -425,9 +509,9 @@ export const CONCEPTS: Concept[] = [
     category: 'aggregate-fn',
     difficulty: 'beginner',
     title: 'COUNT',
-    shortDefinition: '행 또는 NULL이 아닌 값의 개수를 반환하는 집계 함수',
-    definition: 'COUNT(*)는 행 수, COUNT(컬럼)은 해당 컬럼이 NULL이 아닌 행 수, COUNT(DISTINCT 컬럼)은 NULL이 아닌 고유 값의 수를 반환한다. 세 가지가 의미가 다르므로 의도를 정확히 골라야 한다. 오라클은 COUNT(*)를 인덱스만 읽고 처리할 수 있도록 최적화하는 경우가 많다.',
-    whyImportant: '집계의 가장 기본. COUNT(*)와 COUNT(컬럼)을 혼동하면 NULL이 있는 컬럼에서 결과가 달라진다. COUNT(DISTINCT)는 정렬/해시가 필요해 비싸므로 남용 금지.',
+    shortDefinition: '행이나 값의 개수를 세는 집계 함수',
+    definition: '세 가지 형태가 있고 의미가 다 다르다. COUNT(*)는 모든 행 수, COUNT(컬럼)은 그 컬럼이 NULL이 아닌 행 수, COUNT(DISTINCT 컬럼)은 그 컬럼의 중복 제외한 고유 값 개수. 예를 들어 email 컬럼에 NULL이 있으면 COUNT(*)와 COUNT(email)의 결과가 다르다.',
+    whyImportant: '집계의 가장 기본 함수. COUNT(*)는 전체 행 수, COUNT(컬럼)은 그 컬럼에 값이 있는 행 수라는 차이를 모르면 NULL이 섞인 데이터에서 결과가 어긋난다. COUNT(DISTINCT)는 중복 제외가 필요해 처리 비용이 크므로 정말 필요할 때만 쓰자.',
     commonMistakes: [
       'COUNT(*)와 COUNT(컬럼)은 다릅니다. NULL이 있는 컬럼에서 차이 발생.',
       'COUNT(DISTINCT)는 정렬/해시 비용이 큽니다.',
@@ -437,6 +521,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'COUNT(*)는 INDEX FAST FULL SCAN으로 처리될 수 있어 보통 가장 빠르다. COUNT(DISTINCT)는 피할 수 있으면 피하라.',
     relatedCategories: ['sql-aggregate'],
     relatedConcepts: ['group-by', 'sum', 'distinct'],
+    aliases: ['COUNT'],
   },
   {
     tag: 'sum',
@@ -444,9 +529,9 @@ export const CONCEPTS: Concept[] = [
     category: 'aggregate-fn',
     difficulty: 'beginner',
     title: 'SUM',
-    shortDefinition: '숫자 컬럼의 합계를 반환. NULL은 무시',
-    definition: '지정한 숫자 컬럼의 합계를 계산한다. NULL 값은 자동으로 제외된다. 모든 값이 NULL이면 0이 아닌 NULL을 반환하므로 주의해야 한다. 윈도우 함수로 OVER() 절과 함께 쓰면 누적합/이동합 계산도 가능하다.',
-    whyImportant: '"NULL을 0으로 취급" 한다고 잘못 알면 빈 그룹의 합이 0인지 NULL인지 헷갈린다. 모든 값이 NULL이면 SUM은 NULL을 반환하므로 표시용으로는 COALESCE(SUM(x), 0) 패턴을 사용한다.',
+    shortDefinition: '숫자 컬럼의 합계를 반환하는 함수 (NULL은 무시)',
+    definition: '숫자 컬럼의 모든 값을 더한 결과를 반환한다. NULL은 자동으로 무시된다. 주의할 점은 합칠 값이 하나도 없거나 모두 NULL일 때는 0이 아닌 NULL이 반환된다는 것. 윈도우 함수와 함께 OVER()를 붙이면 누적합 같은 계산도 할 수 있다.',
+    whyImportant: '합계를 구할 때 빈 그룹의 결과가 NULL인지 0인지 헷갈리면 화면에 "NULL"이 그대로 찍히는 사고가 난다. 화면이나 리포트에 표시할 때는 COALESCE(SUM(x), 0) 처럼 감싸서 NULL을 0으로 바꿔주는 게 안전하다.',
     commonMistakes: [
       'SUM은 NULL을 무시합니다. 모든 값이 NULL이면 결과는 0이 아닌 NULL.',
       '표시용으로는 COALESCE(SUM(x), 0) 패턴을 사용하세요.',
@@ -456,6 +541,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'GROUP BY와 함께 쓸 때 그룹화 비용이 핵심. 합계를 자주 보면 집계 테이블(materialized view)을 검토하라.',
     relatedCategories: ['sql-aggregate'],
     relatedConcepts: ['count', 'avg', 'group-by'],
+    aliases: ['SUM'],
   },
   {
     tag: 'avg',
@@ -463,9 +549,9 @@ export const CONCEPTS: Concept[] = [
     category: 'aggregate-fn',
     difficulty: 'beginner',
     title: 'AVG',
-    shortDefinition: '숫자 컬럼의 평균값을 반환. NULL은 분모에서 제외',
-    definition: '숫자 컬럼의 평균을 계산한다. NULL 값은 분자와 분모 모두에서 제외된다. 즉, AVG(x)는 SUM(x) / COUNT(x)와 같지 SUM(x) / COUNT(*)가 아니다. NULL을 0으로 보고 평균을 내려면 AVG(COALESCE(x, 0))으로 명시해야 한다.',
-    whyImportant: 'AVG의 NULL 처리 의미를 모르면 통계가 어긋난다. 설문 미응답을 0점으로 볼지(COUNT(*) 기준) 아예 제외할지(COUNT(컬럼) 기준)는 비즈니스 결정이며, AVG 한 줄로 가려진다.',
+    shortDefinition: '숫자 컬럼의 평균값을 반환하는 함수 (NULL은 분모/분자에서 제외)',
+    definition: '숫자 컬럼의 평균을 구한다. NULL은 자동으로 빠진다. 즉 10, NULL, 30의 평균은 (10+30)/2 = 20이지 (10+0+30)/3이 아니다. NULL을 0으로 취급해서 평균을 내려면 AVG(COALESCE(x, 0)) 처럼 명시해줘야 한다.',
+    whyImportant: 'AVG가 NULL을 어떻게 다루는지 모르면 통계가 어긋난다. 설문에서 응답 안 한 사람을 0점으로 볼지, 아예 평균에서 빼버릴지는 비즈니스가 정해야 하는데 AVG 한 줄에 의도가 가려져 버린다.',
     commonMistakes: [
       'AVG는 NULL을 분모에서 제외합니다. SUM(x)/COUNT(x)이지 SUM(x)/COUNT(*)이 아닙니다.',
       'NULL을 0으로 취급한 평균을 원하면 AVG(COALESCE(x, 0))으로 명시.',
@@ -475,6 +561,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'AVG는 내부적으로 SUM과 COUNT를 모두 계산. 둘 다 필요하다면 한 번에 같이 SELECT하는 것이 효율적.',
     relatedCategories: ['sql-aggregate'],
     relatedConcepts: ['sum', 'count', 'coalesce'],
+    aliases: ['AVG'],
   },
 
   // ===== SQL 함수 - NULL 처리 =====
@@ -484,9 +571,9 @@ export const CONCEPTS: Concept[] = [
     category: 'null-handling',
     difficulty: 'beginner',
     title: 'COALESCE',
-    shortDefinition: '인자 중 NULL이 아닌 첫 번째 값을 반환 (ANSI 표준)',
-    definition: '왼쪽부터 인자를 검사하여 NULL이 아닌 첫 번째 값을 반환한다. 모두 NULL이면 NULL을 반환한다. 오라클의 NVL과 비슷하지만 인자를 2개 이상 받을 수 있고 ANSI 표준이라 이식성이 좋다. 표시용 기본값, 다단계 폴백 처리에 자주 쓰인다.',
-    whyImportant: 'NVL은 오라클 전용, IFNULL은 MySQL 전용이지만 COALESCE는 표준이다. 신규 코드라면 COALESCE를 우선 선택해 DB 종속성을 줄여라.',
+    shortDefinition: '여러 값 중 NULL이 아닌 첫 번째 값을 반환하는 함수',
+    definition: '왼쪽부터 차례로 인자를 검사해서 NULL이 아닌 첫 번째 값을 돌려준다. 모두 NULL이면 NULL을 반환. 인자는 2개든 5개든 자유롭게 넣을 수 있다. 예: COALESCE(휴대폰, 집전화, 회사전화, "연락처 없음") 하면 가장 먼저 채워진 연락처를 보여준다.',
+    whyImportant: 'NULL을 다른 값(기본값)으로 바꿀 때 가장 표준적인 함수. 비슷한 함수로 NVL(Oracle 전용), IFNULL(MySQL 전용)이 있지만 COALESCE는 모든 데이터베이스에서 동작하므로 신규 코드는 COALESCE를 쓰는 게 좋다.',
     commonMistakes: [
       'COALESCE는 short-circuit 평가지만, 인덱스 컬럼을 감싸면 인덱스가 막힙니다.',
       '모든 인자가 NULL이면 결과도 NULL입니다.',
@@ -496,6 +583,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'WHERE 절 인덱스 컬럼에 함수 적용은 피하라. COALESCE는 SELECT 절에서 사용 권장.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['nvl', 'nullif', 'null-handling'],
+    aliases: ['COALESCE'],
   },
   {
     tag: 'nvl',
@@ -503,9 +591,9 @@ export const CONCEPTS: Concept[] = [
     category: 'null-handling',
     difficulty: 'beginner',
     title: 'NVL',
-    shortDefinition: 'Oracle 전용. NULL이면 대체값을 반환',
-    definition: 'NVL(expr, replacement)은 expr이 NULL이면 replacement를, 아니면 expr을 반환한다. Oracle 전용 함수이며 인자는 정확히 2개. 두 인자의 데이터 타입이 다르면 묵시적 변환이 일어나는데, 이때 정확도 손실이나 성능 저하가 생길 수 있다. 다단계 폴백이 필요하면 COALESCE가 더 적합하다.',
-    whyImportant: '오라클 레거시 코드에 가장 흔하게 등장하지만, 신규 코드는 COALESCE 권장. NVL은 두 인자를 항상 모두 평가하므로(eager) 두 번째 인자가 비싼 함수 호출이면 불필요한 비용이 발생할 수 있다.',
+    shortDefinition: 'Oracle 전용. 값이 NULL이면 대체값을 반환',
+    definition: 'NVL(값, 대체값) 형식. 값이 NULL이면 대체값을, 아니면 원래 값을 그대로 반환한다. 예: NVL(commission, 0)은 commission이 NULL일 때 0으로 바꿔준다. Oracle 전용이라 다른 DB에서는 동작하지 않는다. 인자는 항상 2개만.',
+    whyImportant: '오라클로 작성된 기존 코드에서 가장 흔히 보이는 NULL 처리 함수. 다만 신규 코드는 표준 함수인 COALESCE를 쓰는 게 좋다 — 다른 DB에서도 동작하고, 인자도 여러 개 받을 수 있어 더 유연하다.',
     commonMistakes: [
       'NVL은 두 인자를 모두 평가합니다. COALESCE는 short-circuit입니다.',
       'NVL은 Oracle 전용이며 ANSI 표준이 아닙니다.',
@@ -516,6 +604,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['coalesce', 'nullif', 'case'],
+    aliases: ['NVL'],
   },
   {
     tag: 'nullif',
@@ -535,6 +624,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '단순 비교라 비용은 작다. 인덱스 컬럼을 NULLIF로 감싸면 인덱스 활용이 막히므로 SELECT 절에서만 사용 권장.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['coalesce', 'nvl', 'case'],
+    aliases: ['NULLIF'],
   },
 
   // ===== SQL 함수 - 조건 =====
@@ -544,9 +634,9 @@ export const CONCEPTS: Concept[] = [
     category: 'conditional',
     difficulty: 'beginner',
     title: 'CASE',
-    shortDefinition: '조건에 따라 다른 값을 반환하는 표준 조건 표현식',
-    definition: '두 가지 형식이 있다. 단순 CASE(CASE x WHEN ...)와 검색 CASE(CASE WHEN 조건 ...). 검색 CASE가 더 유연하다. 위에서 아래로 평가하여 처음 참인 WHEN의 결과를 반환하고, 모두 거짓이면 ELSE 또는 NULL. ANSI 표준이라 모든 DB에서 동작한다. 오라클 전용 DECODE의 표준 대체재.',
-    whyImportant: '복잡한 조건 분기를 SELECT 절에 직접 표현할 수 있다. 옵티마이저는 CASE를 인덱스 활용 측면에서 잘 다루지 못하는 경우가 많아, WHERE 절보다는 SELECT 절에서 사용하는 것이 일반적이다.',
+    shortDefinition: '조건에 따라 다른 값을 반환하는 if-else 같은 표현식',
+    definition: '프로그래밍 언어의 if-else와 비슷한 SQL 문법. CASE WHEN 조건1 THEN 값1 WHEN 조건2 THEN 값2 ELSE 값3 END 형태로 위에서 아래로 검사해 처음 참이 되는 분기의 값을 반환한다. 예: 연봉 1억 이상이면 \'A\', 5천 이상이면 \'B\', 나머지 \'C\' 같은 등급 분류에 자주 쓴다. 모든 DB에서 동작한다.',
+    whyImportant: '복잡한 분류·등급 매기기를 SELECT 한 줄에 표현할 수 있다. 비슷한 Oracle 전용 DECODE 함수도 있지만, CASE가 표준이고 더 읽기 편해서 신규 코드는 CASE를 쓴다.',
     commonMistakes: [
       'WHERE 절의 CASE는 인덱스를 막을 수 있습니다.',
       'ELSE를 생략하면 모든 WHEN이 거짓일 때 NULL이 반환됩니다.',
@@ -556,6 +646,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'WHERE 절 CASE는 인덱스를 막을 수 있다. 가능하면 OR/AND로 풀어 쓰는 것이 옵티마이저에게 더 친절.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['nullif', 'coalesce'],
+    aliases: ['CASE', 'CASE WHEN', 'DECODE'],
   },
 
   // ===== SQL 함수 - 윈도우 =====
@@ -577,6 +668,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'PARTITION BY/ORDER BY 컬럼이 인덱스의 선두와 일치하면 정렬 비용이 줄어든다(WINDOW NOSORT).',
     relatedCategories: ['sql-window'],
     relatedConcepts: ['rank', 'lag', 'window-function', 'partition-by'],
+    aliases: ['ROW_NUMBER'],
   },
   {
     tag: 'rank',
@@ -596,6 +688,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'ROW_NUMBER와 동일한 비용 구조. PARTITION BY/ORDER BY 컬럼에 인덱스가 도움.',
     relatedCategories: ['sql-window'],
     relatedConcepts: ['row-number', 'lag', 'window-function'],
+    aliases: ['RANK', 'DENSE_RANK'],
   },
   {
     tag: 'lag',
@@ -615,6 +708,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '전후 행 접근은 정렬된 윈도우 위에서 O(1)에 가까워 SELF JOIN보다 훨씬 효율적.',
     relatedCategories: ['sql-window'],
     relatedConcepts: ['row-number', 'rank', 'window-function'],
+    aliases: ['LAG', 'LEAD'],
   },
 
   // ===== SQL 함수 - 문자열/날짜 =====
@@ -624,9 +718,9 @@ export const CONCEPTS: Concept[] = [
     category: 'string',
     difficulty: 'beginner',
     title: 'SUBSTR',
-    shortDefinition: '문자열에서 일부를 잘라내 반환하는 함수',
-    definition: 'SUBSTR(문자열, 시작위치, 길이)로 사용한다. 시작위치는 1부터(0이나 음수도 허용 — 음수는 뒤에서부터). 길이를 생략하면 끝까지. ANSI 표준은 SUBSTRING이지만 오라클은 SUBSTR을 표준으로 사용한다. 두 이름 모두 같은 동작을 한다고 알면 안 된다 — 동작은 같지만 함수명 자체가 DB마다 다르다.',
-    whyImportant: '코드 앞 N자리로 분류, 고정 길이 문자열 파싱 등에 자주 쓰인다. WHERE 절 인덱스 컬럼에 SUBSTR을 씌우면 인덱스가 막히므로 함수 기반 인덱스를 쓰거나 LIKE \'prefix%\'로 변환을 검토하라.',
+    shortDefinition: '문자열에서 일부분을 잘라내는 함수',
+    definition: 'SUBSTR(문자열, 시작위치, 길이) 형식. 예: SUBSTR(\'010-1234-5678\', 1, 3) → \'010\'. 시작위치는 1부터. 길이를 생략하면 끝까지 잘라낸다. 같은 기능의 함수가 DB마다 이름이 다른데(오라클·MySQL은 SUBSTR, 표준은 SUBSTRING), 오라클에서는 SUBSTR이 표준이다.',
+    whyImportant: '전화번호 앞 3자리, 우편번호 앞 자리, 카드번호 마스킹 같은 작업에 자주 쓴다. 단, WHERE 조건에 SUBSTR을 씌우면 데이터베이스가 빨리 찾는 기능(인덱스)을 못 쓴다. WHERE col LIKE \'010%\' 같은 형태로 바꾸면 더 빠르다.',
     commonMistakes: [
       'WHERE SUBSTR(col, 1, 3) = \'010\' 보다 WHERE col LIKE \'010%\'가 인덱스를 탑니다.',
       '시작위치는 1부터(0이나 음수는 허용되지만 의미가 다름).',
@@ -636,6 +730,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: 'WHERE에 SUBSTR 적용은 인덱스 무력화. LIKE \'prefix%\' 변환을 검토하라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['to-char'],
+    aliases: ['SUBSTR', 'SUBSTRING'],
   },
   {
     tag: 'to-char',
@@ -643,9 +738,9 @@ export const CONCEPTS: Concept[] = [
     category: 'date',
     difficulty: 'beginner',
     title: 'TO_CHAR',
-    shortDefinition: '날짜/숫자를 지정한 형식의 문자열로 변환',
-    definition: 'TO_CHAR(값, 형식)으로 날짜나 숫자를 지정한 형식의 문자열로 변환한다. 날짜 포맷은 \'YYYY-MM-DD\', \'YYYY-MM\' 등. 오라클 함수이지만 PostgreSQL에도 동일 이름으로 있다. 표준 ANSI 함수는 아니다(표준은 CAST 또는 FORMAT). 가장 흔한 함정: WHERE 절 날짜 컬럼에 TO_CHAR를 씌우면 인덱스 무력화.',
-    whyImportant: '리포트 출력 형식 가공에 일상적으로 쓰이지만, WHERE 절에 사용하면 인덱스를 못 탄다. WHERE TO_CHAR(date_col, \'YYYY\') = \'2025\' 대신 WHERE date_col >= DATE \'2025-01-01\' AND date_col < DATE \'2026-01-01\'.',
+    shortDefinition: '날짜나 숫자를 지정한 형식의 문자열로 바꾸는 함수',
+    definition: 'TO_CHAR(값, 포맷) 형식. 예: TO_CHAR(hire_date, \'YYYY-MM-DD\') → \'2025-03-15\'. 포맷은 YYYY(연), MM(월), DD(일), HH24(24시간) 등을 조합해서 만든다. 화면에 날짜를 예쁘게 표시할 때 가장 많이 쓴다.',
+    whyImportant: '날짜를 보기 좋게 가공할 때 일상적으로 쓰지만, WHERE 조건에 쓰면 안 된다. WHERE TO_CHAR(date_col, \'YYYY\') = \'2025\' 대신 WHERE date_col >= DATE \'2025-01-01\' AND date_col < DATE \'2026-01-01\' 처럼 범위 비교로 써야 검색이 빠르다.',
     commonMistakes: [
       'WHERE 절에 TO_CHAR 사용은 인덱스 무력화. 범위 비교로 변형하세요.',
       'TO_CHAR 결과는 문자열입니다. 정렬/비교 시 주의.',
@@ -655,6 +750,7 @@ export const CONCEPTS: Concept[] = [
     performanceNote: '날짜 인덱스 컬럼을 TO_CHAR로 감싸면 인덱스가 막힌다. 범위 비교로 변형하라.',
     relatedCategories: ['sql-basic'],
     relatedConcepts: ['substr', 'index'],
+    aliases: ['TO_CHAR'],
   },
 
   // ===== Oracle - 메모리 =====
@@ -677,6 +773,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['oracle-arch'],
     relatedConcepts: ['buffer-cache', 'shared-pool', 'pga', 'execution-plan'],
+    aliases: ['SGA', 'System Global Area'],
   },
   {
     tag: 'buffer-cache',
@@ -697,6 +794,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['oracle-arch'],
     relatedConcepts: ['sga', 'shared-pool', 'pga'],
+    aliases: ['Buffer Cache', '버퍼 캐시', 'Database Buffer Cache'],
   },
   {
     tag: 'shared-pool',
@@ -717,6 +815,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['oracle-arch'],
     relatedConcepts: ['sga', 'buffer-cache', 'hard-parse', 'bind-variable'],
+    aliases: ['Shared Pool', 'Library Cache'],
   },
   {
     tag: 'pga',
@@ -758,6 +857,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['oracle-arch'],
     relatedConcepts: ['sga', 'buffer-cache'],
+    aliases: ['백그라운드 프로세스', 'DBWn', 'LGWR', 'SMON', 'PMON'],
   },
 
   // ===== Oracle - 실행/파싱 =====
@@ -780,6 +880,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['hard-parse', 'bind-variable', 'shared-pool', 'index'],
+    aliases: ['실행계획', 'Execution Plan', 'EXPLAIN PLAN'],
   },
   {
     tag: 'hard-parse',
@@ -800,6 +901,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['execution-plan', 'bind-variable', 'shared-pool'],
+    aliases: ['Hard Parse', '하드 파싱', '하드파스', 'Soft Parse'],
   },
   {
     tag: 'bind-variable',
@@ -820,6 +922,7 @@ export const CONCEPTS: Concept[] = [
     oracleSpecific: true,
     relatedCategories: ['sql-tuning'],
     relatedConcepts: ['hard-parse', 'shared-pool', 'execution-plan'],
+    aliases: ['Bind Variable', '바인드 변수', '바인드'],
   },
 ];
 

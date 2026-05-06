@@ -20,6 +20,7 @@ export interface Concept {
   domain?: ConceptDomain;
   category?: string;
   relatedConcepts?: string[];
+  aliases?: string[];
 }
 
 export interface ConceptCategory {

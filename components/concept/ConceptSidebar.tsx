@@ -12,8 +12,8 @@ interface Props {
 
 const NAV_GROUPS = CONCEPT_CATEGORIES
   .map(cat => ({
+    id: cat.id,
     group: cat.name,
-    catId: cat.id,
     items: CONCEPTS
       .filter(c => c.category === cat.id)
       .map(c => ({ tag: c.tag, title: c.title })),
@@ -23,16 +23,16 @@ const NAV_GROUPS = CONCEPT_CATEGORIES
 export default function ConceptSidebar({ currentTag, mode }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const currentGroup = NAV_GROUPS.find(g => g.items.some(i => i.tag === currentTag))?.group;
+  const currentGroupId = NAV_GROUPS.find(g => g.items.some(i => i.tag === currentTag))?.id;
   const currentTitle = NAV_GROUPS.flatMap(g => g.items).find(i => i.tag === currentTag)?.title || '개념 선택';
 
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(currentGroup ? [currentGroup] : []));
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(currentGroupId ? [currentGroupId] : []));
 
-  const toggleGroup = (group: string) => {
+  const toggleGroup = (id: string) => {
     setOpenGroups(prev => {
       const next = new Set(prev);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -40,13 +40,13 @@ export default function ConceptSidebar({ currentTag, mode }: Props) {
   const navContent = (
     <nav className="space-y-1">
       {NAV_GROUPS.map(group => {
-        const isOpen = openGroups.has(group.group);
+        const isOpen = openGroups.has(group.id);
         const hasActive = group.items.some(i => i.tag === currentTag);
 
         return (
-          <div key={group.group}>
+          <div key={group.id}>
             <button
-              onClick={() => toggleGroup(group.group)}
+              onClick={() => toggleGroup(group.id)}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                 hasActive ? 'text-primary bg-primary-light' : 'text-text-sub hover:bg-bg'
               }`}

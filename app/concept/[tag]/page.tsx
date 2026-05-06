@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { CONCEPTS, getConceptByTag, getRelatedConcepts } from '@/data/concepts';
-import { CONCEPT_CATEGORIES, CONCEPT_DOMAINS } from '@/types/concept';
+import { CONCEPT_CATEGORIES } from '@/types/concept';
 import { CATEGORIES } from '@/constants/categories';
 import { ALL_PROBLEMS } from '@/data/problems';
 import { SITE } from '@/constants/site';
 import SqlBlock from '@/components/shared/SqlBlock';
 import ConceptSidebar from '@/components/concept/ConceptSidebar';
 import RelatedProblems from '@/components/concept/RelatedProblems';
+import LinkedText from '@/components/concept/LinkedText';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -54,7 +55,6 @@ export default async function ConceptPage({ params }: Props) {
   if (!concept) notFound();
 
   const category = CONCEPT_CATEGORIES.find(c => c.id === concept.category);
-  const domain = CONCEPT_DOMAINS.find(d => d.id === concept.domain);
   const related = getRelatedConcepts(concept);
 
   const relatedProblems = ALL_PROBLEMS.filter(
@@ -97,12 +97,15 @@ export default async function ConceptPage({ params }: Props) {
             <Link href="/" className="hover:text-primary">홈</Link>
             <span className="mx-1.5">/</span>
             <Link href="/concept" className="hover:text-primary">개념 학습</Link>
-            {domain && (
-              <>
-                <span className="mx-1.5">/</span>
-                <Link href={`/concept#${domain.id}`} className="hover:text-primary">{domain.name}</Link>
-              </>
-            )}
+            {concept.relatedCategories[0] && (() => {
+              const primaryCat = CATEGORIES.find(c => c.id === concept.relatedCategories[0]);
+              return primaryCat ? (
+                <>
+                  <span className="mx-1.5">/</span>
+                  <span>{primaryCat.name}</span>
+                </>
+              ) : null;
+            })()}
             <span className="mx-1.5">/</span>
             <span className="text-text">{concept.title}</span>
           </nav>
@@ -134,7 +137,11 @@ export default async function ConceptPage({ params }: Props) {
             <section className="mb-8">
               <h2 className="text-xl font-semibold mb-3">정의</h2>
               <div className="bg-surface border border-border rounded-lg p-5">
-                <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.definition}</p>
+                <LinkedText
+                  text={concept.definition}
+                  currentTag={tag}
+                  className="text-text-sub leading-relaxed whitespace-pre-line"
+                />
               </div>
             </section>
           )}
@@ -143,7 +150,11 @@ export default async function ConceptPage({ params }: Props) {
           <section className="mb-8">
             <h2 className="text-xl font-semibold mb-3">왜 중요한가?</h2>
             <div className="bg-primary-light/30 border border-primary/20 rounded-lg p-5">
-              <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.whyImportant}</p>
+              <LinkedText
+                text={concept.whyImportant}
+                currentTag={tag}
+                className="text-text-sub leading-relaxed whitespace-pre-line"
+              />
             </div>
           </section>
 
@@ -155,7 +166,7 @@ export default async function ConceptPage({ params }: Props) {
                 {concept.commonMistakes.map((m, i) => (
                   <li key={i} className="flex gap-2 bg-error/5 border border-error/20 rounded-lg p-4">
                     <span className="text-error font-bold shrink-0">!</span>
-                    <p className="text-sm text-text-sub">{m}</p>
+                    <LinkedText text={m} currentTag={tag} className="text-sm text-text-sub" />
                   </li>
                 ))}
               </ul>
@@ -176,7 +187,11 @@ export default async function ConceptPage({ params }: Props) {
               <h2 className="text-xl font-semibold mb-3">성능 포인트</h2>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 flex gap-3">
                 <span className="text-amber-700 font-bold shrink-0">!</span>
-                <p className="text-text-sub leading-relaxed whitespace-pre-line">{concept.performanceNote}</p>
+                <LinkedText
+                  text={concept.performanceNote}
+                  currentTag={tag}
+                  className="text-text-sub leading-relaxed whitespace-pre-line"
+                />
               </div>
             </section>
           )}
